@@ -5,15 +5,16 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase
 
 // Suas chaves do Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyD5ugoPst247l63pmUZBqiTG3LzbJ68LOo",
-  authDomain: "wilkson-gestor-contratos.firebaseapp.com",
-  projectId: "wilkson-gestor-contratos",
-  storageBucket: "wilkson-gestor-contratos.firebasestorage.app",
-  messagingSenderId: "391559952649",
-  appId: "1:391559952649:web:f01e6262927eaea675bbd8"
+  apiKey: "AIzaSyBC3laSN4MUaVEWUXRcEQzGSd2syKQLFkM",
+  authDomain: "franciscopenha-cac9a.firebaseapp.com",
+  projectId: "franciscopenha-cac9a",
+  storageBucket: "franciscopenha-cac9a.firebasestorage.app",
+  messagingSenderId: "364864321406",
+  appId: "1:364864321406:web:b6578bd0143586b78ae52f"
 };
 
 // Inicializa e exporta os serviços
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+
 export const db = getFirestore(app);
