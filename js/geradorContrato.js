@@ -85,9 +85,9 @@ function generateContractText(formData, dbState) {
         '{{rules}}': formData.rules || '',
         '{{studentName}}': formData.studentName || '[Aluno]',
         '{{studentClass}}': formData.studentClass || '[Turma]',
-        '{{contratadoName}}': "Wilkson Albuquerque Carvalho",
-        '{{contratadoCPF}}': "646.660.003-30",
-        '{{contratadoAddress}}': "Rua das Araras, 11, Imperatriz - MA",
+        '{{contratadoName}}': "Francisco Penha",
+        '{{contratadoCPF}}': "000.000.000-00",
+        '{{contratadoAddress}}': "Rua Dorgival, 11, Imperatriz - MA",
         '{{currentDate}}': new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
     };
 
@@ -212,3 +212,4 @@ export function initGeradorListeners() {
         });
     }
 }
+
