@@ -401,6 +401,8 @@ export function renderFinanceiro(dbState) {
         }).join('');
 }
 
+// ... dentro de js/ui.js ...
+
 export function renderCustos(dbState) {
     const lista = document.getElementById('lista-custos');
     lista.innerHTML = dbState.custos.length === 0
@@ -413,15 +415,59 @@ export function renderCustos(dbState) {
                 ? new Date(item.data + 'T00:00:00').toLocaleDateString('pt-BR') 
                 : 'Sem data';
 
-            return `<tr class="border-b hover:bg-gray-50">
+            // Lógica de Status
+            const isPendente = item.status === 'Pendente';
+            const isRecorrente = item.repetir === true;
+
+            // Badge de Status
+            let statusHtml = '';
+            if (isPendente) {
+                statusHtml = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    <i data-lucide="clock" class="w-3 h-3 mr-1"></i> Pendente
+                </span>`;
+            } else {
+                statusHtml = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <i data-lucide="check" class="w-3 h-3 mr-1"></i> Pago
+                </span>`;
+            }
+
+            // Controle de Recorrência (Toggle)
+            const btnRecorrencia = `
+                <button onclick="window.app.toggleRecorrencia('${item.id}', ${!isRecorrente})" 
+                    class="ml-2 p-1 rounded hover:bg-gray-200 ${isRecorrente ? 'text-blue-600' : 'text-gray-400'}" 
+                    title="${isRecorrente ? 'Desativar repetição mensal' : 'Ativar repetição mensal'}">
+                    <i data-lucide="repeat" class="w-4 h-4"></i>
+                </button>
+            `;
+
+            // Botão de Confirmar (Só aparece se for Pendente)
+            const btnConfirmar = isPendente 
+                ? `<button onclick="window.app.confirmarCusto('${item.id}')" class="text-green-600 hover:text-green-800 mr-2" title="Confirmar Pagamento">
+                     <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                   </button>`
+                : '';
+
+            return `<tr class="border-b hover:bg-gray-50 ${isPendente ? 'bg-yellow-50/50' : ''}">
                 <td class="p-4">${dataFormatada}</td>
-                <td class="p-4">${item.descricao}</td>
-                <td class="p-4">${evento ? evento.nome : 'Custo Fixo'}</td>
-                <td class="p-4">${fotografo ? fotografo.nome : 'N/A'}</td>
-                <td class="p-4">R$ ${valor.toFixed(2).replace('.', ',')}</td>
-                <td class="p-4"><button onclick="window.app.deleteItem('custos', '${item.id}')" class="text-red-500 hover:text-red-700" title="Excluir Custo"><i data-lucide="trash-2" class="w-5 h-5"></i></button></td>
+                <td class="p-4 font-medium">${item.descricao}</td>
+                <td class="p-4 text-sm text-gray-600">${evento ? evento.nome : 'Custo Fixo'} ${fotografo ? `(${fotografo.nome})` : ''}</td>
+                <td class="p-4 font-bold text-gray-700">R$ ${valor.toFixed(2).replace('.', ',')}</td>
+                <td class="p-4 flex items-center">
+                    ${statusHtml}
+                    ${btnRecorrencia}
+                </td>
+                <td class="p-4">
+                    <div class="flex items-center">
+                        ${btnConfirmar}
+                        <button onclick="window.app.deleteItem('custos', '${item.id}')" class="text-red-500 hover:text-red-700" title="Excluir Custo">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </td>
             </tr>`;
         }).join('');
+        
+    if (window.lucide) window.lucide.createIcons();
 }
 
 export function renderContasAReceber(dbState) {
