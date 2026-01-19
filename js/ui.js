@@ -1,11 +1,13 @@
 // js/ui.js
 
-// ... (Mantenha myFluxoChart e funções de dashboard iguais) ...
+// ######################################################
+// ARQUIVO 4: RENDERIZADOR DA INTERFACE (UI)
+// ######################################################
+
 // Variável global para o gráfico
 let myFluxoChart = null; 
-// ...
 
-// ... (updateDashboard, renderKanban, renderClientes, renderContratos, renderFotografos, renderFinanceiro, renderCustos, renderContasAReceber, renderFluxoDeCaixaChart, renderCalendario, mudarMes, populateSelectWithOptions, populateEventoClienteSelect, populateEventoSelect, populateCustoFotografoSelect, populateContratoClienteSelect, updateContratoEventoSelect, populateEntregaEventoSelect, updatePackageSelect - TUDO ISSO FICA IGUAL) ...
+// --- 1. RENDERIZAÇÃO DO DASHBOARD ---
 
 export function updateDashboard(dbState) {
     const totalPago = dbState.financeiro.reduce((acc, item) => acc + (parseFloat(item.valor) || 0), 0);
@@ -75,13 +77,12 @@ export function updateDashboard(dbState) {
     });
     document.getElementById('db-eventos-30d').innerText = eventos30DiasCount;
 
-    // --- Novas Listas do Dashboard ---
-    
     // Próximos 5 Eventos
     const proximosEventosContainer = document.getElementById('dashboard-proximos-eventos');
     if (proximosEventosContainer) {
         const eventosFuturos = dbState.eventos
             .filter(evento => evento.data && new Date(evento.data + 'T00:00:00') >= hoje)
+            .sort((a, b) => new Date(a.data) - new Date(b.data))
             .slice(0, 5); 
 
         if (eventosFuturos.length === 0) {
@@ -105,8 +106,8 @@ export function updateDashboard(dbState) {
     if (ultimosEventosContainer) {
         const eventosPassados = dbState.eventos
             .filter(evento => evento.data && new Date(evento.data + 'T00:00:00') < hoje)
-            .slice(-5)
-            .reverse();
+            .sort((a, b) => new Date(b.data) - new Date(a.data)) // Decrescente
+            .slice(0, 5);
 
         if (eventosPassados.length === 0) {
             ultimosEventosContainer.innerHTML = '<p class="text-gray-500">Nenhum evento passado encontrado.</p>';
@@ -680,21 +681,246 @@ export function populateEntregaEventoSelect(dbState, selectedEventIdForEntrega) 
     select.value = selectedEventIdForEntrega || "";
 }
 
-// --- NOVO: FUNÇÃO PARA OS PACOTES DINÂMICOS ---
-/**
- * Preenche um select com os pacotes filtrados por categoria.
- * Esta função será usada tanto no Editor de Templates quanto no Gerador.
- */
+// --- FUNÇÕES DE MODAL ---
+
+export function showSection(sectionId, dbState, calendarioData) {
+    document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+    const section = document.getElementById(sectionId);
+    if (section) {
+        section.classList.remove('hidden');
+        if (sectionId === 'section-calendario' && calendarioData) {
+            renderCalendario(calendarioData, dbState);
+        }
+    }
+}
+
+export function openAddPaymentModal(contratoId = null) {
+    document.getElementById('modal-add-payment').classList.remove('hidden');
+    document.getElementById('add-payment-form').reset();
+    document.getElementById('payment-date').valueAsDate = new Date();
+    
+    if (contratoId) {
+        document.getElementById('payment-contrato-id').value = contratoId;
+    }
+}
+
+export function closeAddPaymentModal() {
+    document.getElementById('modal-add-payment').classList.add('hidden');
+}
+
+export function openDossieModal(contratoId, dbState) {
+    const contrato = dbState.contratos.find(c => c.id === contratoId);
+    if (!contrato) return;
+    
+    const cliente = dbState.clientes.find(c => c.id === contrato.clienteId);
+    const evento = dbState.eventos.find(e => e.id === contrato.eventoId);
+    const pagamentos = dbState.financeiro.filter(p => p.contratoId === contratoId);
+
+    document.getElementById('dossie-cliente-nome').innerText = cliente ? cliente.nome : '---';
+    document.getElementById('dossie-evento-nome').innerText = evento ? evento.nome : '---';
+    document.getElementById('dossie-evento-data').innerText = evento && evento.data ? new Date(evento.data + 'T00:00:00').toLocaleDateString('pt-BR') : '---';
+    document.getElementById('dossie-contrato-status').innerText = contrato.status;
+    document.getElementById('dossie-contrato-valor').innerText = `R$ ${(parseFloat(contrato.valorTotal) || 0).toFixed(2).replace('.', ',')}`;
+
+    const listaPag = document.getElementById('dossie-lista-pagamentos');
+    listaPag.innerHTML = pagamentos.length === 0 
+        ? '<p class="text-gray-500">Nenhum pagamento registrado.</p>' 
+        : pagamentos.map(p => `<div class="flex justify-between border-b py-1"><span>${new Date(p.data + 'T00:00:00').toLocaleDateString('pt-BR')}</span><span>R$ ${parseFloat(p.valor).toFixed(2).replace('.', ',')}</span></div>`).join('');
+        
+    const totalPago = pagamentos.reduce((acc, p) => acc + parseFloat(p.valor), 0);
+    const restante = parseFloat(contrato.valorTotal) - totalPago;
+    
+    document.getElementById('dossie-total-pago').innerText = `R$ ${totalPago.toFixed(2).replace('.', ',')}`;
+    document.getElementById('dossie-restante').innerText = `R$ ${restante.toFixed(2).replace('.', ',')}`;
+    
+    const restanteEl = document.getElementById('dossie-restante');
+    if (restante > 0) restanteEl.classList.add('text-red-600');
+    else restanteEl.classList.remove('text-red-600');
+
+    document.getElementById('modal-dossie').classList.remove('hidden');
+}
+
+export function closeDossieModal() {
+    document.getElementById('modal-dossie').classList.add('hidden');
+}
+
+export function openDossieModalFromEvento(eventoId, dbState) {
+    const contrato = dbState.contratos.find(c => c.eventoId === eventoId);
+    if (contrato) {
+        openDossieModal(contrato.id, dbState);
+    } else {
+        alert("Nenhum contrato encontrado para este evento.");
+    }
+}
+
+export function abrirNovoEventoDoCalendario(dataString) {
+    showSection('section-eventos'); 
+    document.getElementById('evento-data').value = dataString;
+    document.getElementById('evento-nome').focus();
+}
+
+export function openEditContratoModal(contratoId, dbState) {
+    const contrato = dbState.contratos.find(c => c.id === contratoId);
+    if (!contrato) return;
+
+    document.getElementById('edit-contrato-id').value = contrato.id;
+    document.getElementById('edit-contrato-status').value = contrato.status;
+    document.getElementById('edit-contrato-link').value = contrato.link || '';
+    document.getElementById('edit-contrato-forma-pagamento').value = contrato.formaPagamento || '';
+
+    document.getElementById('modal-edit-contrato').classList.remove('hidden');
+}
+
+export function closeEditContratoModal() {
+    document.getElementById('modal-edit-contrato').classList.add('hidden');
+}
+
+export function abrirGerador(contratoId, dbState) {
+    showSection('section-gerador');
+    // A lógica de preenchimento automático do gerador será tratada no geradorContrato.js 
+    // mas poderíamos disparar um evento aqui se necessário.
+    // Por simplicidade, assumimos que o usuário vai preencher ou usamos uma integração futura.
+    console.log("Abrindo gerador para contrato:", contratoId);
+    // Em uma versão futura, preencher os campos do gerador com os dados do contrato/cliente
+}
+
+export function viewEntregaFromAtraso(eventId, dbState) {
+    const select = document.getElementById('entrega-evento-select');
+    if(select) {
+        select.value = eventId;
+        // Dispara o evento de change manualmente para atualizar a view
+        select.dispatchEvent(new Event('change'));
+    }
+}
+
+// --- FUNÇÕES DE TEMPLATE E PACOTE ---
+
+export function populateTemplateForm(template) {
+    document.getElementById('template-id').value = template.id;
+    document.getElementById('template-titulo').value = template.titulo;
+    document.getElementById('template-link-tipo').value = template.link_tipo || 'geral';
+    // O select de pacote precisa ser atualizado primeiro, depois setado o valor
+    const event = new Event('change');
+    document.getElementById('template-link-tipo').dispatchEvent(event);
+    
+    // Pequeno timeout para garantir que o select foi populado
+    setTimeout(() => {
+        document.getElementById('template-link-pacote').value = template.link_pacote || '';
+    }, 100);
+
+    const corpoDiv = document.getElementById('template-corpo');
+    if (corpoDiv) corpoDiv.innerHTML = template.corpo;
+}
+
+export function clearTemplateForm() {
+    document.getElementById('form-template').reset();
+    document.getElementById('template-id').value = "";
+    document.getElementById('template-corpo').innerHTML = "";
+}
+
+export function renderTemplates(dbState) {
+    const lista = document.getElementById('lista-templates');
+    if (!lista) return;
+
+    if (!dbState.templates || dbState.templates.length === 0) {
+        lista.innerHTML = '<p class="text-gray-500">Nenhum template cadastrado.</p>';
+        return;
+    }
+
+    lista.innerHTML = dbState.templates.map(t => `
+        <div class="bg-white p-4 rounded shadow flex justify-between items-center">
+            <div>
+                <h4 class="font-bold">${t.titulo}</h4>
+                <p class="text-xs text-gray-500">Vínculo: ${t.link_tipo || 'Geral'}</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="window.app.editTemplate('${t.id}')" class="text-blue-500 hover:text-blue-700">
+                    <i data-lucide="edit-3" class="w-5 h-5"></i>
+                </button>
+                <button onclick="window.app.deleteItem('templates', '${t.id}')" class="text-red-500 hover:text-red-700">
+                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+    
+    if (window.lucide) window.lucide.createIcons();
+}
+
+export function renderPacotes(dbState) {
+    const container = document.getElementById('lista-pacotes');
+    if (!container) return;
+
+    if (!dbState.pacotes || dbState.pacotes.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhum pacote cadastrado.</p>';
+        return;
+    }
+
+    // Agrupa pacotes por categoria
+    const categories = {};
+    dbState.pacotes.forEach(p => {
+        const cat = p.package_category_name || 'Sem Categoria';
+        if (!categories[cat]) categories[cat] = [];
+        categories[cat].push(p);
+    });
+
+    // Renderiza
+    container.innerHTML = Object.keys(categories).sort().map(categoryName => {
+        const items = categories[categoryName];
+        
+        const itemsHtml = items.map(pacote => {
+            const valor = (pacote.package_value || 0).toFixed(2).replace('.', ',');
+            return `
+                <div class="flex justify-between items-center bg-white p-2 mb-1 rounded border border-gray-100 hover:shadow-sm transition-shadow">
+                    <div>
+                        <span class="font-semibold text-gray-800 text-sm">${pacote.package_name}</span>
+                        <span class="text-xs text-green-600 font-bold ml-2">R$ ${valor}</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="window.app.editPacote('${pacote.id}')" class="text-blue-500 hover:text-blue-700" title="Editar">
+                            <i data-lucide="edit-2" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="window.app.deleteItem('pacotes', '${pacote.id}')" class="text-red-500 hover:text-red-700" title="Excluir">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="border border-gray-200 rounded-lg overflow-hidden mb-4">
+                <h3 class="text-lg font-bold text-gray-900 bg-gray-50 p-3 border-b">${categoryName}</h3>
+                <div class="p-2 bg-gray-50/50 space-y-1">
+                    ${itemsHtml}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    if (window.lucide) window.lucide.createIcons();
+}
+
+export function populatePacoteForm(pacote) {
+    document.getElementById('pacote-id').value = pacote.id;
+    document.getElementById('pacote-tipo-vinculo').value = pacote.package_category_id || '';
+    document.getElementById('pacote-nome').value = pacote.package_name || '';
+    document.getElementById('pacote-valor').value = pacote.package_value || 0;
+}
+
+export function clearPacoteForm() {
+    document.getElementById('form-pacote').reset();
+    document.getElementById('pacote-id').value = "";
+}
+
 export function updatePackageSelect(selectElementId, categoryId, dbState) {
     const select = document.getElementById(selectElementId);
     if (!select) return;
 
-    // Limpa e reseta
     select.innerHTML = '<option value="">Selecione um Pacote...</option>';
 
     if (!categoryId || !dbState.pacotes) return;
 
-    // Filtra os pacotes pela categoria
     const pacotesFiltrados = dbState.pacotes.filter(p => p.package_category_id === categoryId);
 
     pacotesFiltrados.forEach(pacote => {
@@ -965,4 +1191,3 @@ export function renderEntregasAtrasadas(dbState) {
 
     if (window.lucide) window.lucide.createIcons();
 }
-// ...
