@@ -441,12 +441,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('edit-contract-form').addEventListener('submit', (e) => {
         e.preventDefault();
         const contratoId = e.target.elements['edit-contrato-id'].value;
+        
         const dataToUpdate = {
+            valorTotal: parseFloat(e.target.elements['edit-contrato-valor'].value),
+            
+            // NOVO: Salva o histórico de texto
+            historico_valores: e.target.elements['edit-contrato-historico'].value,
+            
             status: e.target.elements['edit-contrato-status'].value,
             link: e.target.elements['edit-contrato-link'].value,
             formaPagamento: e.target.elements['edit-contrato-forma-pagamento'].value
         };
-        store.updateContrato(userId, contratoId, dataToUpdate).then(() => ui.closeEditContratoModal()).catch(e => alert(e.message));
+        
+        store.updateContrato(userId, contratoId, dataToUpdate)
+            .then(() => ui.closeEditContratoModal())
+            .catch(e => alert(e.message));
     });
     
     document.getElementById('cancel-payment-button').addEventListener('click', ui.closeAddPaymentModal);
@@ -476,3 +485,4 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('payment-date').valueAsDate = new Date();
     document.getElementById('custo-data').valueAsDate = new Date();
 });
+
