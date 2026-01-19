@@ -1,7 +1,7 @@
 // js/main.js
 
 // ######################################################
-// ARQUIVO 7: O CÉREBRO MESTRE (main.js)
+// ARQUIVO 7: O CÉREBRO MESTRE (main.js) - VERSÃO FINAL CUSTOS
 // ######################################################
 
 import { setupAuthListeners } from './auth.js';
@@ -11,18 +11,32 @@ import { initGeradorListeners } from './geradorContrato.js';
 import { initDragAndDrop } from './kanban.js'; 
 
 let userId = null;
-// ATUALIZADO: Inclui 'configuracoes'
+
+// Estado global da aplicação
 let dbState = { 
     eventos: [], clientes: [], contratos: [], fotografos: [], 
     financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], configuracoes: []
 };
+
 let unsubscribeListeners = []; 
 let calendarioData = new Date(); 
 let selectedEventIdForEntrega = null; 
 
+/**
+ * Função chamada sempre que algo muda no Banco de Dados (Firebase)
+ */
 function onDataChange(newState) {
     dbState = newState; 
     
+    // --- AUTOMAÇÃO DE CUSTOS FIXOS ---
+    // Verifica se virou o mês e precisa gerar os custos pendentes
+    if (userId && dbState.custos.length > 0) {
+        store.verificarGerarCustosFixos(userId, dbState)
+            .catch(err => console.error("Erro na automação de custos:", err));
+    }
+    // ---------------------------------
+
+    // Atualiza toda a Interface
     ui.updateDashboard(dbState);
     ui.renderKanban(dbState);
     ui.renderClientes(dbState);
@@ -32,13 +46,14 @@ function onDataChange(newState) {
     ui.renderCustos(dbState); 
     ui.renderCalendario(calendarioData, dbState);
     
+    // Atualiza os Selects (comboboxes)
     ui.populateEventoClienteSelect(dbState);
     ui.populateEventoSelect(dbState);
     ui.populateCustoFotografoSelect(dbState);
     ui.populateContratoClienteSelect(dbState);
     ui.populateEntregaEventoSelect(dbState, selectedEventIdForEntrega);
     
-    // Atualiza cards de entrega se houver evento selecionado
+    // Atualiza seção de Entregas (se visível)
     if (selectedEventIdForEntrega) {
         const evento = dbState.eventos.find(e => e.id === selectedEventIdForEntrega);
         ui.renderEntregaCards(evento, dbState);
@@ -46,53 +61,71 @@ function onDataChange(newState) {
         ui.renderEntregasAtrasadas(dbState);
     }
     
-    // NOVO: Renderiza configurações de prazo se a tela estiver visível
     const entregaSection = document.getElementById('section-entrega');
     if (entregaSection && !entregaSection.classList.contains('hidden')) {
         ui.renderConfigPrazos(dbState);
     }
 
+    // Atualiza seção Financeira (se visível)
     const financeiroSection = document.getElementById('section-financeiro');
     if (financeiroSection && !financeiroSection.classList.contains('hidden')) {
         ui.renderContasAReceber(dbState);
         ui.renderFluxoDeCaixaChart(dbState);
     }
 
+    // Atualiza Configurações
     ui.renderTemplates(dbState);
     ui.renderPacotes(dbState);
 
+    // Recarrega ícones
     if (window.lucide) window.lucide.createIcons();
 }
 
+/**
+ * Callback de Login
+ */
 function onLogin(user) {
     userId = user.uid;
     document.getElementById('login-overlay').classList.add('hidden');
     document.getElementById('app-container').classList.remove('hidden');
     document.getElementById('app-container').classList.add('flex');
     document.getElementById('auth-status').innerText = user.email;
+    
+    // Inicia os listeners do banco de dados
     unsubscribeListeners = store.setupRealtimeListeners(userId, onDataChange);
 }
 
+/**
+ * Callback de Logout
+ */
 function onLogout() {
     userId = null;
     document.getElementById('login-overlay').classList.remove('hidden');
     document.getElementById('app-container').classList.add('hidden');
     document.getElementById('app-container').classList.remove('flex');
     document.getElementById('auth-status').innerText = "Desconectado";
+    
+    // Cancela listeners antigos
     unsubscribeListeners.forEach(unsub => unsub());
     unsubscribeListeners = [];
+    
+    // Reseta estado
     dbState = { eventos: [], clientes: [], contratos: [], fotografos: [], financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], configuracoes: [] };
     onDataChange(dbState); 
 }
 
+// Inicialização quando a página carrega
 document.addEventListener('DOMContentLoaded', () => {
     
     setupAuthListeners(onLogin, onLogout);
     initDragAndDrop(); 
     
-    // OBJETO GLOBAL APP (Exposto para o HTML usar via onclick)
+    // --- WINDOW.APP: Funções expostas para o HTML (onclick) ---
     window.app = {
+        // Navegação
         showSection: (sectionId) => ui.showSection(sectionId, dbState, calendarioData),
+        
+        // Modais e Dossiê
         openDossieModal: (contratoId) => ui.openDossieModal(contratoId, dbState),
         openDossieModalFromEvento: (eventoId) => {
             const contrato = dbState.contratos.find(c => c.eventoId === eventoId);
@@ -102,12 +135,36 @@ document.addEventListener('DOMContentLoaded', () => {
         closeDossieModal: ui.closeDossieModal,
         openAddPaymentModal: ui.openAddPaymentModal,
         openEditContratoModal: (contratoId) => ui.openEditContratoModal(contratoId, dbState),
+        
+        // Gerador e Calendário
         abrirGerador: (contratoId) => ui.abrirGerador(contratoId, dbState),
         abrirNovoEventoDoCalendario: ui.abrirNovoEventoDoCalendario,
+        
+        // Entregas e Prazos
         viewEntregaFromAtraso: (eventId) => {
             selectedEventIdForEntrega = eventId;
             ui.viewEntregaFromAtraso(eventId, dbState);
         },
+        marcarEntregue: (eventId, tipo) => {
+            if (!userId) return;
+            store.marcarEntregue(userId, eventId, tipo).catch(e => alert(e.message));
+        },
+        reverterEntrega: (eventId, tipo) => {
+            if (!userId) return;
+            if(confirm("Deseja marcar esta etapa como NÃO entregue novamente?")) {
+                store.reverterEntrega(userId, eventId, tipo).catch(e => alert(e.message));
+            }
+        },
+        updateEventoPrazo: (eventId, tipo, novaData) => {
+            if (!userId) return;
+            store.updateEventoPrazo(userId, eventId, tipo, novaData).catch(e => alert(e.message));
+        },
+        saveConfigPrazos: (prazos) => {
+            if (!userId) return;
+            store.saveConfigPrazos(userId, prazos).then(() => alert("Configurações salvas!")).catch(e => alert(e.message));
+        },
+
+        // Edição de Cadastros
         editTemplate: (templateId) => {
             if (!templateId) return;
             const template = dbState.templates.find(t => t.id === templateId);
@@ -128,6 +185,34 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         getDbState: () => dbState,
         updatePackageSelect: ui.updatePackageSelect, 
+
+        // Kanban Drag & Drop Logic
+        updateEventoColuna: (eventoId, novaColunaId) => {
+            if (!userId) return;
+            store.updateEventoColuna(userId, eventoId, novaColunaId).catch(e => alert(e.message));
+        },
+
+        // --- NOVAS FUNÇÕES PARA CUSTOS FIXOS ---
+        toggleRecorrencia: (custoId, deveRepetir) => {
+            if (!userId) return;
+            // Mensagem amigável para confirmar a ação
+            const msg = deveRepetir 
+                ? "Deseja tornar este custo recorrente? Ele será gerado automaticamente nos próximos meses." 
+                : "Deseja parar a repetição mensal deste custo?";
+            
+            if(confirm(msg)) {
+                store.toggleCustoRecorrencia(userId, custoId, deveRepetir).catch(e => alert(e.message));
+            }
+        },
+        confirmarCusto: (custoId) => {
+            if (!userId) return;
+            if(confirm("Confirmar que este custo fixo já foi pago este mês?")) {
+                store.confirmarCustoPendente(userId, custoId).catch(e => alert(e.message));
+            }
+        },
+        // ----------------------------------------
+        
+        // Exclusão Genérica
         deleteItem: (collectionName, id) => {
             if (!userId) return;
             let message = `Tem certeza que deseja excluir este item?`;
@@ -143,52 +228,21 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (collectionName === 'contratos') {
                 message += `\n\nATENÇÃO: Isso NÃO excluirá os pagamentos já feitos.`;
-            } else if (collectionName === 'financeiro') {
-                message = `Tem certeza que deseja excluir este PAGAMENTO?`;
-            } else if (collectionName === 'colunas') {
-                message = `⚠️ ATENÇÃO ⚠️\n\nSe você excluir esta coluna, os eventos que estão nela ficarão invisíveis até serem movidos. Tem certeza?`;
-            } else if (collectionName === 'pacotes') {
-                message = `Tem certeza que deseja excluir este PACOTE?\n\nIsso não afetará contratos já gerados.`;
+            } else if (collectionName === 'custos') {
+                 message = `Excluir este custo?`;
             }
 
             if (confirm(message)) {
                 store.deleteSingleItem(userId, collectionName, id).catch(e => alert(e.message)); 
             }
         },
-        updateEventoColuna: (eventoId, novaColunaId) => {
-            if (!userId) return;
-            store.updateEventoColuna(userId, eventoId, novaColunaId).catch(e => alert(e.message));
-        },
-        
-        // --- NOVAS FUNÇÕES EXPOSTAS (Se faltar isso, dá erro) ---
-        marcarEntregue: (eventId, tipo) => {
-            if (!userId) return;
-            store.marcarEntregue(userId, eventId, tipo).catch(e => alert(e.message));
-        },
-        reverterEntrega: (eventId, tipo) => {
-            if (!userId) return;
-            if(confirm("Deseja marcar esta etapa como NÃO entregue novamente?")) {
-                store.reverterEntrega(userId, eventId, tipo).catch(e => alert(e.message));
-            }
-        },
-        updateEventoPrazo: (eventId, tipo, novaData) => {
-            if (!userId) return;
-            store.updateEventoPrazo(userId, eventId, tipo, novaData).catch(e => alert(e.message));
-        },
-        saveConfigPrazos: (prazos) => {
-            if (!userId) return;
-            store.saveConfigPrazos(userId, prazos)
-                .then(() => alert("Configurações padrão salvas com sucesso!"))
-                .catch(e => alert(e.message));
-        },
-        // -----------------------------
 
+        // Exportação
         exportarCSV: () => {
             if (!dbState.eventos || dbState.eventos.length === 0) {
                 alert("Não há dados suficientes para exportar.");
                 return;
             }
-            
              let csvContent = "Evento;Data do Evento;Cliente;Email;Telefone;Tipo;Local;Pacote/Contrato;Valor Contrato;Total Pago;Restante;Total Custos;Lucro Liquido;Status Previa;Status Midia;Status Album\n";
 
             dbState.eventos.forEach(evento => {
@@ -196,7 +250,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const contrato = dbState.contratos.find(c => c.eventoId === evento.id); 
                 
                 const valorTotal = contrato ? (parseFloat(contrato.valorTotal) || 0) : 0;
-                
                 const totalPago = contrato 
                     ? dbState.financeiro
                         .filter(p => p.contratoId === contrato.id)
@@ -204,37 +257,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     : 0;
                 
                 const restante = valorTotal - totalPago;
-
                 const totalCustos = dbState.custos
                     .filter(c => c.eventoId === evento.id)
                     .reduce((acc, c) => acc + (parseFloat(c.valor) || 0), 0);
-
                 const lucro = totalPago - totalCustos; 
-
                 const dataEvento = evento.data ? new Date(evento.data + 'T00:00:00').toLocaleDateString('pt-BR') : '';
-                
                 const safeText = (text) => text ? text.replace(/;/g, " - ").replace(/(\r\n|\n|\r)/gm, " ") : "";
                 const money = (val) => val.toFixed(2).replace('.', ',');
 
                 const row = [
-                    safeText(evento.nome),
-                    dataEvento,
-                    safeText(cliente.nome),
-                    safeText(cliente.email),
-                    safeText(cliente.telefone),
-                    safeText(evento.tipo),
-                    safeText(evento.local),
-                    contrato ? "Sim" : "Sem Contrato", 
-                    money(valorTotal),
-                    money(totalPago),
-                    money(restante),
-                    money(totalCustos),
-                    money(lucro),
-                    safeText(evento.entrega_previa_status),
-                    safeText(evento.entrega_midia_status),
-                    safeText(evento.entrega_album_status)
+                    safeText(evento.nome), dataEvento, safeText(cliente.nome), safeText(cliente.email), safeText(cliente.telefone),
+                    safeText(evento.tipo), safeText(evento.local), contrato ? "Sim" : "Sem Contrato", 
+                    money(valorTotal), money(totalPago), money(restante), money(totalCustos), money(lucro),
+                    safeText(evento.entrega_previa_status), safeText(evento.entrega_midia_status), safeText(evento.entrega_album_status)
                 ];
-
                 csvContent += row.join(";") + "\n";
             });
 
@@ -249,9 +285,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Inicializa listeners do Gerador
     initGeradorListeners(); 
 
-    // Listeners de Formulários
+    // --- EVENT LISTENERS DE FORMULÁRIOS ---
+
     const templateTypeSelect = document.getElementById('template-link-tipo');
     if (templateTypeSelect) {
         templateTypeSelect.addEventListener('change', (e) => {
@@ -355,15 +393,25 @@ document.addEventListener('DOMContentLoaded', () => {
         store.handleFormSubmit(userId, 'fotografos', data).then(() => e.target.reset()).catch(e => alert(e.message));
     });
     
+    // ATUALIZADO: FORMULÁRIO DE CUSTOS COM CHECKBOX
     document.getElementById('form-custo').addEventListener('submit', (e) => {
         e.preventDefault();
+        
+        // Pega o checkbox de repetir
+        const isRepeating = e.target.elements['custo-repetir'] ? e.target.elements['custo-repetir'].checked : false;
+
         const data = {
             data: e.target.elements['custo-data'].value,
             descricao: e.target.elements['custo-descricao'].value, 
             valor: parseFloat(e.target.elements['custo-valor'].value), 
             eventoId: e.target.elements['custo-evento'].value,
-            fotografoId: e.target.elements['custo-fotografo'].value
+            fotografoId: e.target.elements['custo-fotografo'].value,
+            
+            // Novos campos para a lógica de custos fixos
+            repetir: isRepeating,
+            status: 'Pago' // Ao registrar manualmente, assumimos que já foi pago ou está sendo pago agora
         };
+
         store.handleFormSubmit(userId, 'custos', data).then(() => {
             e.target.reset();
             document.getElementById('custo-data').valueAsDate = new Date();
@@ -423,6 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('calendario-next').addEventListener('click', () => { ui.mudarMes(1, calendarioData, dbState); });
     document.getElementById('mobile-menu-button').addEventListener('click', () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); });
 
+    // Inicialização de datas nos forms
     document.getElementById('contrato-data').valueAsDate = new Date();
     document.getElementById('payment-date').valueAsDate = new Date();
     document.getElementById('custo-data').valueAsDate = new Date();
