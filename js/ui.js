@@ -1,11 +1,40 @@
 // js/ui.js
 
 // ######################################################
-// ARQUIVO 4: RENDERIZADOR DA INTERFACE (UI)
+// ARQUIVO 4: RENDERIZADOR DA INTERFACE (UI) - CORRIGIDO
 // ######################################################
 
 // Variável global para o gráfico
 let myFluxoChart = null; 
+
+// --- 0. FUNÇÕES AUXILIARES DE AUTH (Restauradas) ---
+
+export function showLoginError(message) {
+    let errorEl = document.getElementById('login-error-message');
+    // Se o elemento não existir no HTML, cria um fallback ou usa alert
+    if (!errorEl) {
+        const form = document.getElementById('login-form');
+        if (form) {
+            errorEl = document.createElement('div');
+            errorEl.id = 'login-error-message';
+            errorEl.className = 'text-red-500 text-sm mt-2 text-center';
+            form.appendChild(errorEl);
+        } else {
+            alert(message);
+            return;
+        }
+    }
+    errorEl.textContent = message;
+    errorEl.classList.remove('hidden');
+}
+
+export function hideLoginError() {
+    const errorEl = document.getElementById('login-error-message');
+    if (errorEl) {
+        errorEl.classList.add('hidden');
+        errorEl.textContent = '';
+    }
+}
 
 // --- 1. RENDERIZAÇÃO DO DASHBOARD ---
 
@@ -777,18 +806,13 @@ export function closeEditContratoModal() {
 
 export function abrirGerador(contratoId, dbState) {
     showSection('section-gerador');
-    // A lógica de preenchimento automático do gerador será tratada no geradorContrato.js 
-    // mas poderíamos disparar um evento aqui se necessário.
-    // Por simplicidade, assumimos que o usuário vai preencher ou usamos uma integração futura.
     console.log("Abrindo gerador para contrato:", contratoId);
-    // Em uma versão futura, preencher os campos do gerador com os dados do contrato/cliente
 }
 
 export function viewEntregaFromAtraso(eventId, dbState) {
     const select = document.getElementById('entrega-evento-select');
     if(select) {
         select.value = eventId;
-        // Dispara o evento de change manualmente para atualizar a view
         select.dispatchEvent(new Event('change'));
     }
 }
@@ -936,7 +960,7 @@ export function updatePackageSelect(selectElementId, categoryId, dbState) {
 
 // --- 5. LÓGICA DE UI DA SEÇÃO "ENTREGA" (ATUALIZADA) ---
 
-// NOVO: Renderiza a caixa de configuração no topo da seção de entrega
+// Renderiza a caixa de configuração no topo da seção de entrega
 export function renderConfigPrazos(dbState) {
     // Procura o container de config ou cria um
     const section = document.getElementById('section-entrega');
