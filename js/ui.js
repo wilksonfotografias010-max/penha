@@ -38,7 +38,26 @@ export function hideLoginError() {
 
 // --- 1. RENDERIZAÇÃO DO DASHBOARD ---
 
+// js/ui.js (Apenas substitua a função updateDashboard e as funções auxiliares abaixo)
+
+// Função auxiliar para evitar erro se o elemento não existir
+function safeSetText(id, text) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.innerText = text;
+    }
+}
+
+// Função auxiliar para evitar erro ao setar HTML
+function safeSetHTML(id, html) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.innerHTML = html;
+    }
+}
+
 export function updateDashboard(dbState) {
+    // Cálculo dos valores
     const totalPago = dbState.financeiro.reduce((acc, item) => acc + (parseFloat(item.valor) || 0), 0);
     
     let totalContratado = 0;
@@ -49,16 +68,21 @@ export function updateDashboard(dbState) {
     });
     
     const totalPendente = totalContratado - totalPago;
-    document.getElementById('total-pendente').innerText = `R$ ${totalPendente.toFixed(2).replace('.', ',')}`;
-
     const totalCustos = dbState.custos.reduce((acc, item) => acc + (parseFloat(item.valor) || 0), 0);
-    document.getElementById('total-custos').innerText = `R$ ${totalCustos.toFixed(2).replace('.', ',')}`;
-
     const lucroLiquido = totalPago - totalCustos;
+
+    // --- ATUALIZAÇÃO SEGURA DO DOM ---
+    
+    // Cards do Topo
+    safeSetText('total-pendente', `R$ ${totalPendente.toFixed(2).replace('.', ',')}`);
+    safeSetText('total-custos', `R$ ${totalCustos.toFixed(2).replace('.', ',')}`);
+
     const lucroEl = document.getElementById('lucro-liquido');
-    lucroEl.innerText = `R$ ${lucroLiquido.toFixed(2).replace('.', ',')}`;
-    lucroEl.classList.toggle('text-red-600', lucroLiquido < 0);
-    lucroEl.classList.toggle('text-gray-800', lucroLiquido >= 0);
+    if (lucroEl) {
+        lucroEl.innerText = `R$ ${lucroLiquido.toFixed(2).replace('.', ',')}`;
+        lucroEl.classList.toggle('text-red-600', lucroLiquido < 0);
+        lucroEl.classList.toggle('text-gray-800', lucroLiquido >= 0);
+    }
 
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
@@ -74,7 +98,7 @@ export function updateDashboard(dbState) {
             }
         });
     });
-    document.getElementById('db-entregas-criticas').innerText = entregasCriticasCount;
+    safeSetText('db-entregas-criticas', entregasCriticasCount);
     
     // Contratos Fechados (Mês)
     let valorContratosMes = 0;
@@ -89,7 +113,7 @@ export function updateDashboard(dbState) {
             }
         }
     });
-    document.getElementById('db-contratos-mes').innerText = `R$ ${valorContratosMes.toFixed(2).replace('.', ',')}`;
+    safeSetText('db-contratos-mes', `R$ ${valorContratosMes.toFixed(2).replace('.', ',')}`);
 
     // Eventos (Próximos 30 dias)
     let eventos30DiasCount = 0;
@@ -104,72 +128,71 @@ export function updateDashboard(dbState) {
             }
         }
     });
-    document.getElementById('db-eventos-30d').innerText = eventos30DiasCount;
+    safeSetText('db-eventos-30d', eventos30DiasCount);
 
+    // --- Listas do Dashboard ---
+    
     // Próximos 5 Eventos
-    const proximosEventosContainer = document.getElementById('dashboard-proximos-eventos');
-    if (proximosEventosContainer) {
-        const eventosFuturos = dbState.eventos
-            .filter(evento => evento.data && new Date(evento.data + 'T00:00:00') >= hoje)
-            .sort((a, b) => new Date(a.data) - new Date(b.data))
-            .slice(0, 5); 
+    const eventosFuturos = dbState.eventos
+        .filter(evento => evento.data && new Date(evento.data + 'T00:00:00') >= hoje)
+        .sort((a, b) => new Date(a.data) - new Date(b.data))
+        .slice(0, 5); 
 
-        if (eventosFuturos.length === 0) {
-            proximosEventosContainer.innerHTML = '<p class="text-gray-500">Nenhum evento futuro agendado.</p>';
-        } else {
-            proximosEventosContainer.innerHTML = eventosFuturos.map(evento => {
-                const dataFormatada = new Date(evento.data + 'T00:00:00').toLocaleDateString('pt-BR');
-                const cliente = dbState.clientes.find(c => c.id === evento.clienteId);
-                return `
-                    <div class="border-b border-gray-100 pb-2">
-                        <p class="font-semibold text-gray-800">${evento.nome}</p>
-                        <p class="text-sm text-gray-600">${cliente ? cliente.nome : 'Cliente'} - <strong>${dataFormatada}</strong></p>
-                    </div>
-                `;
-            }).join('');
-        }
+    let htmlFuturos = '';
+    if (eventosFuturos.length === 0) {
+        htmlFuturos = '<p class="text-gray-500">Nenhum evento futuro agendado.</p>';
+    } else {
+        htmlFuturos = eventosFuturos.map(evento => {
+            const dataFormatada = new Date(evento.data + 'T00:00:00').toLocaleDateString('pt-BR');
+            const cliente = dbState.clientes.find(c => c.id === evento.clienteId);
+            return `
+                <div class="border-b border-gray-100 pb-2">
+                    <p class="font-semibold text-gray-800">${evento.nome}</p>
+                    <p class="text-sm text-gray-600">${cliente ? cliente.nome : 'Cliente'} - <strong>${dataFormatada}</strong></p>
+                </div>
+            `;
+        }).join('');
     }
+    safeSetHTML('dashboard-proximos-eventos', htmlFuturos);
 
     // Últimos 5 Eventos (Entregas)
-    const ultimosEventosContainer = document.getElementById('dashboard-ultimos-eventos');
-    if (ultimosEventosContainer) {
-        const eventosPassados = dbState.eventos
-            .filter(evento => evento.data && new Date(evento.data + 'T00:00:00') < hoje)
-            .sort((a, b) => new Date(b.data) - new Date(a.data)) // Decrescente
-            .slice(0, 5);
+    const eventosPassados = dbState.eventos
+        .filter(evento => evento.data && new Date(evento.data + 'T00:00:00') < hoje)
+        .sort((a, b) => new Date(b.data) - new Date(a.data)) // Decrescente
+        .slice(0, 5);
 
-        if (eventosPassados.length === 0) {
-            ultimosEventosContainer.innerHTML = '<p class="text-gray-500">Nenhum evento passado encontrado.</p>';
-        } else {
-            ultimosEventosContainer.innerHTML = eventosPassados.map(evento => {
-                const infoMidia = getEntregaInfo(evento, 'midia');
-                const infoAlbum = getEntregaInfo(evento, 'album');
+    let htmlPassados = '';
+    if (eventosPassados.length === 0) {
+        htmlPassados = '<p class="text-gray-500">Nenhum evento passado encontrado.</p>';
+    } else {
+        htmlPassados = eventosPassados.map(evento => {
+            const infoMidia = getEntregaInfo(evento, 'midia');
+            const infoAlbum = getEntregaInfo(evento, 'album');
 
-                const getStatusColor = (info) => {
-                    if (info.status === 'entregue') return 'text-green-600';
-                    if (info.status === 'atrasado') return 'text-red-600';
-                    if (info.status === 'hoje') return 'text-yellow-600';
-                    return 'text-blue-600'; 
-                };
-                
-                const midiaColor = getStatusColor(infoMidia);
-                const albumColor = getStatusColor(infoAlbum);
-                const dataFormatada = new Date(evento.data + 'T00:00:00').toLocaleDateString('pt-BR');
+            const getStatusColor = (info) => {
+                if (info.status === 'entregue') return 'text-green-600';
+                if (info.status === 'atrasado') return 'text-red-600';
+                if (info.status === 'hoje') return 'text-yellow-600';
+                return 'text-blue-600'; 
+            };
+            
+            const midiaColor = getStatusColor(infoMidia);
+            const albumColor = getStatusColor(infoAlbum);
+            const dataFormatada = new Date(evento.data + 'T00:00:00').toLocaleDateString('pt-BR');
 
-                return `
-                    <div class="border-b border-gray-100 pb-3">
-                        <p class="font-semibold text-gray-800">${evento.nome} <span class="text-sm text-gray-500">(${dataFormatada})</span></p>
-                        <div class="text-sm space-y-1 mt-1 pl-2">
-                            <p><strong>Mídia:</strong> <span class="font-medium ${midiaColor}">${infoMidia.text}</span></p>
-                            <p><strong>Álbum:</strong> <span class="font-medium ${albumColor}">${infoAlbum.text}</span></p>
-                        </div>
+            return `
+                <div class="border-b border-gray-100 pb-3">
+                    <p class="font-semibold text-gray-800">${evento.nome} <span class="text-sm text-gray-500">(${dataFormatada})</span></p>
+                    <div class="text-sm space-y-1 mt-1 pl-2">
+                        <p><strong>Mídia:</strong> <span class="font-medium ${midiaColor}">${infoMidia.text}</span></p>
+                        <p><strong>Álbum:</strong> <span class="font-medium ${albumColor}">${infoAlbum.text}</span></p>
                     </div>
-                `;
-            }).join('');
-        }
+                </div>
+            `;
+        }).join('');
     }
+    safeSetHTML('dashboard-ultimos-eventos', htmlPassados);
 }
-
 
 // --- 2. RENDERIZAÇÃO DAS SEÇÕES PRINCIPAIS ---
 
