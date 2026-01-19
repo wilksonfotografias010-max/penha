@@ -1,7 +1,7 @@
 // js/store.js
 
 // ######################################################
-// ARQUIVO 5: CAMADA DE DADOS (STORE) - VERSÃO COMPLETA
+// ARQUIVO 5: CAMADA DE DADOS (STORE) - ATUALIZADO
 // ######################################################
 
 import { db } from './firebase.js'; 
@@ -25,13 +25,14 @@ import {
 export function setupRealtimeListeners(userId, onDataChangeCallback) {
     if (!userId) return [];
 
-    // Estado inicial completo
+    // ADICIONADO: 'configuracoes' ao estado inicial
     const dbState = { 
         eventos: [], clientes: [], contratos: [], fotografos: [], 
-        financeiro: [], custos: [], colunas: [], templates: [], pacotes: [] 
+        financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], configuracoes: [] 
     };
     
-    const collections = ['eventos', 'clientes', 'contratos', 'fotografos', 'financeiro', 'custos', 'colunas', 'templates', 'pacotes'];
+    // ADICIONADO: 'configuracoes' na lista de coleções
+    const collections = ['eventos', 'clientes', 'contratos', 'fotografos', 'financeiro', 'custos', 'colunas', 'templates', 'pacotes', 'configuracoes'];
     let unsubscribeListeners = [];
 
     collections.forEach(col => {
@@ -40,7 +41,7 @@ export function setupRealtimeListeners(userId, onDataChangeCallback) {
             
             dbState[col] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-            // Ordenações
+            // Ordenações existentes mantidas
             if (col === 'clientes') {
                 dbState.clientes.sort((a, b) => a.nome.localeCompare(b.nome));
             }
@@ -73,9 +74,7 @@ export function setupRealtimeListeners(userId, onDataChangeCallback) {
     return unsubscribeListeners;
 }
 
-/**
- * Adiciona um novo documento.
- */
+// ... (Mantenha as funções handleFormSubmit e deleteSingleItem iguais) ...
 export async function handleFormSubmit(userId, collectionName, data) {
     if (!userId) { console.error("Usuário não autenticado."); return; }
     try {
@@ -86,10 +85,6 @@ export async function handleFormSubmit(userId, collectionName, data) {
     }
 }
 
-/**
- * Deleta um documento ÚNICO (Simples).
- * Esta é a função que o botão de lixeira do Pacote chama.
- */
 export async function deleteSingleItem(userId, collectionName, id) {
     if (!userId) return;
     try {
@@ -99,10 +94,9 @@ export async function deleteSingleItem(userId, collectionName, id) {
         throw new Error(`Falha ao deletar item de ${collectionName}`);
     }
 }
+// ...
 
-/**
- * Atualiza o status (coluna) de um evento no Kanban.
- */
+// ... (Mantenha updateEventoColuna igual) ...
 export async function updateEventoColuna(userId, eventoId, novaColunaId) {
     if (!userId || !eventoId || !novaColunaId) return;
     const docRef = doc(db, `users/${userId}/eventos/${eventoId}`);
@@ -114,8 +108,10 @@ export async function updateEventoColuna(userId, eventoId, novaColunaId) {
     }
 }
 
+// --- MODIFICADO: FUNÇÕES DE ENTREGA ---
+
 /**
- * Marca entrega.
+ * Marca entrega (Atualizado para permitir desfazer se necessário, embora tenhamos criado reverter separada)
  */
 export async function marcarEntregue(userId, eventId, tipo) {
     if (!userId || !eventId || !tipo) return;
@@ -134,8 +130,59 @@ export async function marcarEntregue(userId, eventId, tipo) {
 }
 
 /**
- * Atualiza contrato.
+ * NOVO: Reverte o status de entrega para Pendente
  */
+export async function reverterEntrega(userId, eventId, tipo) {
+    if (!userId || !eventId || !tipo) return;
+    const docRef = doc(db, `users/${userId}/eventos/${eventId}`);
+    const statusField = `entrega_${tipo}_status`;
+    const dataField = `entrega_${tipo}_data`;
+    try {
+        await updateDoc(docRef, {
+            [statusField]: "Pendente",
+            [dataField]: null
+        });
+    } catch (error) {
+        console.error("Erro ao reverter entrega: ", error);
+        throw new Error("Falha ao reverter status.");
+    }
+}
+
+/**
+ * NOVO: Atualiza a data de prazo específica de um evento
+ */
+export async function updateEventoPrazo(userId, eventId, tipo, novaData) {
+    if (!userId || !eventId || !tipo) return;
+    const docRef = doc(db, `users/${userId}/eventos/${eventId}`);
+    // Salva no campo ex: prazo_previa, prazo_midia, prazo_album
+    const fieldName = `prazo_${tipo}`;
+    
+    try {
+        await updateDoc(docRef, {
+            [fieldName]: novaData // Pode ser null para resetar
+        });
+    } catch (error) {
+        console.error("Erro ao atualizar prazo: ", error);
+        throw new Error("Falha ao atualizar prazo.");
+    }
+}
+
+/**
+ * NOVO: Salva as configurações globais de prazos
+ */
+export async function saveConfigPrazos(userId, prazosData) {
+    if (!userId) return;
+    // Usamos um ID fixo 'global_prazos' para facilitar
+    const docRef = doc(db, `users/${userId}/configuracoes/global_prazos`);
+    try {
+        await setDoc(docRef, prazosData, { merge: true });
+    } catch (error) {
+        console.error("Erro ao salvar configs: ", error);
+        throw new Error("Falha ao salvar configurações.");
+    }
+}
+
+// ... (Mantenha updateContrato, saveTemplate, savePacote e as funções de delete cascade iguais) ...
 export async function updateContrato(userId, contratoId, dataToUpdate) {
     if (!userId || !contratoId) return;
     const docRef = doc(db, `users/${userId}/contratos/${contratoId}`);
@@ -147,9 +194,6 @@ export async function updateContrato(userId, contratoId, dataToUpdate) {
     }
 }
 
-/**
- * Salva ou Atualiza um Template.
- */
 export async function saveTemplate(userId, templateData, templateId) {
     if (!userId) throw new Error("Usuário não autenticado.");
     if (templateId) {
@@ -160,9 +204,6 @@ export async function saveTemplate(userId, templateData, templateId) {
     }
 }
 
-/**
- * Salva ou Atualiza um Pacote.
- */
 export async function savePacote(userId, pacoteData, pacoteId) {
     if (!userId) throw new Error("Usuário não autenticado.");
     if (pacoteId) {
@@ -173,73 +214,49 @@ export async function savePacote(userId, pacoteData, pacoteId) {
     }
 }
 
-// --- FUNÇÕES DE EXCLUSÃO EM CASCATA (MESTRA) ---
-
 export async function deleteEventAndRelations(userId, eventoId) {
     if (!userId || !eventoId) return;
     const batch = writeBatch(db);
-
-    // 1. Custos
     const custosQuery = query(collection(db, `users/${userId}/custos`), where("eventoId", "==", eventoId));
     const custosSnapshot = await getDocs(custosQuery);
     custosSnapshot.forEach(doc => batch.delete(doc.ref));
-
-    // 2. Contratos
     const contratosQuery = query(collection(db, `users/${userId}/contratos`), where("eventoId", "==", eventoId));
     const contratosSnapshot = await getDocs(contratosQuery);
-
-    // 3. Pagamentos
     for (const contratoDoc of contratosSnapshot.docs) {
         const pagamentosQuery = query(collection(db, `users/${userId}/financeiro`), where("contratoId", "==", contratoDoc.id));
         const pagamentosSnapshot = await getDocs(pagamentosQuery);
         pagamentosSnapshot.forEach(doc => batch.delete(doc.ref));
         batch.delete(contratoDoc.ref);
     }
-
-    // 4. O Evento
     const eventoRef = doc(db, `users/${userId}/eventos/${eventoId}`);
     batch.delete(eventoRef);
-
     await batch.commit();
 }
 
 export async function deleteClientAndRelations(userId, clienteId) {
     if (!userId || !clienteId) return;
     const batch = writeBatch(db);
-
-    // 1. Eventos
     const eventosQuery = query(collection(db, `users/${userId}/eventos`), where("clienteId", "==", clienteId));
     const eventosSnapshot = await getDocs(eventosQuery);
-
     for (const eventoDoc of eventosSnapshot.docs) {
-        // Custos do evento
         const custosQuery = query(collection(db, `users/${userId}/custos`), where("eventoId", "==", eventoDoc.id));
         const custosSnapshot = await getDocs(custosQuery);
         custosSnapshot.forEach(doc => batch.delete(doc.ref));
         batch.delete(eventoDoc.ref);
     }
-
-    // 2. Contratos
     const contratosQuery = query(collection(db, `users/${userId}/contratos`), where("clienteId", "==", clienteId));
     const contratosSnapshot = await getDocs(contratosQuery);
-
     for (const contratoDoc of contratosSnapshot.docs) {
-        // Pagamentos do contrato
         const pagamentosQuery = query(collection(db, `users/${userId}/financeiro`), where("contratoId", "==", contratoDoc.id));
         const pagamentosSnapshot = await getDocs(pagamentosQuery);
         pagamentosSnapshot.forEach(doc => batch.delete(doc.ref));
         batch.delete(contratoDoc.ref);
     }
-
-    // 3. O Cliente
     const clienteRef = doc(db, `users/${userId}/clientes/${clienteId}`);
     batch.delete(clienteRef);
-
     await batch.commit();
 }
-/**
- * Atualiza o nome de uma coluna Kanban.
- */
+
 export async function updateColumn(userId, columnId, newName) {
     if (!userId || !columnId || !newName) return;
     const docRef = doc(db, `users/${userId}/colunas/${columnId}`);
@@ -250,4 +267,3 @@ export async function updateColumn(userId, columnId, newName) {
         throw new Error("Falha ao renomear a coluna.");
     }
 }
-
