@@ -1,13 +1,11 @@
 // js/ui.js
 
-// ######################################################
-// ARQUIVO 4: RENDERIZADOR DA INTERFACE (UI) - VERSÃO V01
-// ######################################################
-
+// ... (Mantenha myFluxoChart e funções de dashboard iguais) ...
 // Variável global para o gráfico
 let myFluxoChart = null; 
+// ...
 
-// --- 1. RENDERIZAÇÃO DO DASHBOARD ---
+// ... (updateDashboard, renderKanban, renderClientes, renderContratos, renderFotografos, renderFinanceiro, renderCustos, renderContasAReceber, renderFluxoDeCaixaChart, renderCalendario, mudarMes, populateSelectWithOptions, populateEventoClienteSelect, populateEventoSelect, populateCustoFotografoSelect, populateContratoClienteSelect, updateContratoEventoSelect, populateEntregaEventoSelect, updatePackageSelect - TUDO ISSO FICA IGUAL) ...
 
 export function updateDashboard(dbState) {
     const totalPago = dbState.financeiro.reduce((acc, item) => acc + (parseFloat(item.valor) || 0), 0);
@@ -710,7 +708,59 @@ export function updatePackageSelect(selectElementId, categoryId, dbState) {
 }
 
 
-// --- 5. LÓGICA DE UI DA SEÇÃO "ENTREGA" ---
+// --- 5. LÓGICA DE UI DA SEÇÃO "ENTREGA" (ATUALIZADA) ---
+
+// NOVO: Renderiza a caixa de configuração no topo da seção de entrega
+export function renderConfigPrazos(dbState) {
+    // Procura o container de config ou cria um
+    const section = document.getElementById('section-entrega');
+    let configContainer = document.getElementById('entrega-config-container');
+    
+    if (!configContainer) {
+        configContainer = document.createElement('div');
+        configContainer.id = 'entrega-config-container';
+        configContainer.className = 'bg-blue-50 p-4 rounded-lg shadow-sm mb-6 border border-blue-100';
+        
+        // Insere logo após o título h1
+        const h1 = section.querySelector('h1');
+        h1.parentNode.insertBefore(configContainer, h1.nextSibling);
+    }
+
+    // Pega configurações existentes (ou padrão)
+    const config = (dbState.configuracoes && dbState.configuracoes.find(c => c.id === 'global_prazos')) || {};
+    const diasPrevia = config.dias_previa || 3;
+    const diasMidia = config.dias_midia || 60;
+    const diasAlbum = config.dias_album || 180;
+
+    configContainer.innerHTML = `
+        <details>
+            <summary class="cursor-pointer font-semibold text-blue-800 flex items-center gap-2">
+                <i data-lucide="settings" class="w-4 h-4"></i> Configurar Prazos Padrão (Dias)
+            </summary>
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">Prévia</label>
+                    <input type="number" id="cfg-dias-previa" value="${diasPrevia}" class="w-full p-2 border rounded text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">Mídia (Fotos)</label>
+                    <input type="number" id="cfg-dias-midia" value="${diasMidia}" class="w-full p-2 border rounded text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700">Álbum</label>
+                    <input type="number" id="cfg-dias-album" value="${diasAlbum}" class="w-full p-2 border rounded text-sm">
+                </div>
+                <button onclick="
+                    const p = document.getElementById('cfg-dias-previa').value;
+                    const m = document.getElementById('cfg-dias-midia').value;
+                    const a = document.getElementById('cfg-dias-album').value;
+                    window.app.saveConfigPrazos({ dias_previa: p, dias_midia: m, dias_album: a });
+                " class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 transition">Salvar Padrões</button>
+            </div>
+        </details>
+    `;
+    if (window.lucide) window.lucide.createIcons();
+}
 
 export function getEntregaInfo(evento, tipo) {
     const dataEventoStr = evento.data;
@@ -718,31 +768,51 @@ export function getEntregaInfo(evento, tipo) {
     hoje.setHours(0, 0, 0, 0);
 
     if (!dataEventoStr) {
-        return { status: 'nodate', text: 'Data do evento não definida', deadline: 'N/A', bgColor: 'bg-gray-100', textColor: 'text-gray-500', diffDays: 99999 };
+        return { status: 'nodate', text: 'Data do evento não definida', deadline: 'N/A', bgColor: 'bg-gray-100', textColor: 'text-gray-500', diffDays: 99999, prazoDate: null };
     }
 
     const dataEvento = new Date(dataEventoStr + 'T00:00:00');
     let dataPrazo = new Date(dataEvento);
-    let statusField, dataField, title;
+    let statusField, dataField, title, prazoField;
+
+    // 1. Tenta pegar configurações globais do window.app
+    let diasPadrao = 0;
+    let config = {};
+    if (window.app && window.app.getDbState) {
+        const dbState = window.app.getDbState();
+        config = (dbState.configuracoes && dbState.configuracoes.find(c => c.id === 'global_prazos')) || {};
+    }
 
     if (tipo === 'previa') {
-        dataPrazo.setDate(dataEvento.getDate() + 3);
+        diasPadrao = parseInt(config.dias_previa || 3);
         statusField = 'entrega_previa_status';
         dataField = 'entrega_previa_data';
+        prazoField = 'prazo_previa';
         title = 'PRÉVIA';
     } else if (tipo === 'midia') {
-        dataPrazo.setDate(dataEvento.getDate() + 60);
+        diasPadrao = parseInt(config.dias_midia || 60);
         statusField = 'entrega_midia_status';
         dataField = 'entrega_midia_data';
+        prazoField = 'prazo_midia';
         title = 'FOTOS EM MÍDIA';
     } else if (tipo === 'album') {
-        dataPrazo.setMonth(dataEvento.getMonth() + 6);
+        diasPadrao = parseInt(config.dias_album || 180);
         statusField = 'entrega_album_status';
         dataField = 'entrega_album_data';
+        prazoField = 'prazo_album';
         title = 'ALBUM IMPRESSO';
     }
 
+    // 2. Define a data base do prazo
+    // Se o evento tiver um prazo ESPECÍFICO salvo, usa ele. Se não, usa o cálculo padrão.
+    if (evento[prazoField]) {
+        dataPrazo = new Date(evento[prazoField] + 'T00:00:00');
+    } else {
+        dataPrazo.setDate(dataEvento.getDate() + diasPadrao);
+    }
+
     const prazoFormatado = dataPrazo.toLocaleDateString('pt-BR');
+    const prazoISO = dataPrazo.toISOString().split('T')[0]; // Para o input type="date"
     const diffTime = dataPrazo.getTime() - hoje.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
@@ -752,7 +822,8 @@ export function getEntregaInfo(evento, tipo) {
             title, status: 'entregue', text: `Entregue em ${dataEntrega}`, 
             deadline: `Prazo: ${prazoFormatado}`, bgColor: 'bg-green-100', 
             textColor: 'text-green-800', diffDays: 99998,
-            data: dataEntrega
+            data: dataEntrega,
+            prazoDate: prazoISO
         };
     }
 
@@ -761,7 +832,7 @@ export function getEntregaInfo(evento, tipo) {
             title, status: 'atrasado', text: `${Math.abs(diffDays)} dia(s) atrasado`, 
             deadline: `Prazo: ${prazoFormatado}`, bgColor: 'bg-red-100', 
             textColor: 'text-red-800', diffDays: diffDays,
-            data: null
+            data: null, prazoDate: prazoISO
         };
     }
     if (diffDays === 0) {
@@ -769,14 +840,14 @@ export function getEntregaInfo(evento, tipo) {
             title, status: 'hoje', text: 'Vence Hoje', 
             deadline: `Prazo: ${prazoFormatado}`, bgColor: 'bg-yellow-100', 
             textColor: 'text-yellow-800', diffDays: 0,
-            data: null
+            data: null, prazoDate: prazoISO
         };
     }
     return { 
         title, status: 'pendente', text: `Vence em ${diffDays} dia(s)`, 
         deadline: `Prazo: ${prazoFormatado}`, bgColor: 'bg-blue-100', 
         textColor: 'text-blue-800', diffDays: diffDays,
-        data: null
+        data: null, prazoDate: prazoISO
     };
 }
 
@@ -792,13 +863,30 @@ export function renderEntregaCards(evento, dbState) {
     container.innerHTML = tipos.map(tipo => {
         const info = getEntregaInfo(evento, tipo);
         
+        // Botão principal (Alterna entre Entregue e Pendente)
         const buttonHtml = info.status === 'entregue'
-            ? `<button class="w-full bg-green-500 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2" disabled>
+            ? `<div class="flex gap-2">
+                 <button class="w-full bg-green-500 text-white font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 cursor-default">
                     <i data-lucide="check-circle" class="w-5 h-5"></i> Entregue
-               </button>`
+                 </button>
+                 <button onclick="window.app.reverterEntrega('${evento.id}', '${tipo}')" class="bg-gray-200 text-gray-600 px-3 rounded-lg hover:bg-gray-300" title="Desfazer entrega">
+                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                 </button>
+               </div>`
             : `<button onclick="window.app.marcarEntregue('${evento.id}', '${tipo}')" class="w-full bg-gray-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors">
                     Marcar como Entregue
                </button>`;
+        
+        // Input para mudar a data do prazo
+        const dateInputHtml = `
+            <div class="mt-2 text-xs">
+                <label class="block text-gray-500 mb-1">Alterar Prazo:</label>
+                <input type="date" value="${info.prazoDate || ''}" 
+                    onchange="window.app.updateEventoPrazo('${evento.id}', '${tipo}', this.value)"
+                    class="bg-white/50 border border-black/10 rounded px-2 py-1 w-full text-gray-700 focus:outline-none focus:bg-white"
+                >
+            </div>
+        `;
 
         return `
             <div class="bg-white p-6 rounded-lg shadow-md flex flex-col justify-between ${info.bgColor} ${info.textColor}">
@@ -806,8 +894,9 @@ export function renderEntregaCards(evento, dbState) {
                     <h3 class="text-xl font-bold text-gray-900">${info.title}</h3>
                     <p class="text-2xl font-bold mt-2">${info.text}</p>
                     <p class="text-sm text-gray-600 mt-1">${info.deadline}</p>
+                    ${dateInputHtml}
                 </div>
-                <div class="mt-6">
+                <div class="mt-4">
                     ${buttonHtml}
                 </div>
             </div>
@@ -876,389 +965,4 @@ export function renderEntregasAtrasadas(dbState) {
 
     if (window.lucide) window.lucide.createIcons();
 }
-
-
-// --- 6. FUNÇÕES DE NAVEGAÇÃO E MODAIS ---
-
-export function showSection(sectionId, dbState, calendarioData) {
-    if (window.innerWidth < 768) {
-        document.getElementById('sidebar').classList.add('-translate-x-full');
-    }
-    
-    document.querySelectorAll('.content-section').forEach(section => section.classList.add('hidden'));
-    
-    const sectionElement = document.getElementById(`section-${sectionId}`);
-    if (sectionElement) {
-        sectionElement.classList.remove('hidden');
-    }
-    
-    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('bg-gray-700'));
-    const activeLink = document.querySelector(`a[onclick*="showSection('${sectionId}')"]`);
-    if (activeLink) {
-        activeLink.classList.add('bg-gray-700');
-    }
-
-    // Lógica Específica por Seção
-    if (sectionId === 'entrega') {
-        document.getElementById('entrega-evento-select').value = '';
-        document.getElementById('entrega-default-view').classList.remove('hidden');
-        document.getElementById('entrega-management-area').classList.add('hidden');
-        renderEntregasAtrasadas(dbState);
-    }
-    if (sectionId === 'contratos') {
-        updateContratoEventoSelect(null, dbState);
-        document.getElementById('form-contrato').reset();
-        document.getElementById('contrato-data').valueAsDate = new Date();
-    }
-    if (sectionId === 'calendario') {
-        renderCalendario(calendarioData, dbState);
-    }
-    if (sectionId === 'gerador') {
-        document.getElementById('contractForm').reset();
-        const contractTypeSelect = document.getElementById('contractType');
-        contractTypeSelect.value = '';
-        contractTypeSelect.dispatchEvent(new Event('change'));
-        document.getElementById('outputSection').classList.add('hidden');
-    }
-    if (sectionId === 'templates') {
-        clearTemplateForm();
-        renderTemplates(dbState);
-    }
-    if (sectionId === 'pacotes') {
-        clearPacoteForm();
-        renderPacotes(dbState);
-    }
-    if (sectionId === 'financeiro') {
-        renderContasAReceber(dbState);
-        renderFluxoDeCaixaChart(dbState);
-    }
-}
-
-export function abrirGerador(contratoId, dbState) {
-    const contrato = dbState.contratos.find(c => c.id === contratoId);
-    if (!contrato) {
-        alert("Erro: Contrato não encontrado.");
-        return;
-    }
-    const cliente = dbState.clientes.find(c => c.id === contrato.clienteId);
-    const evento = dbState.eventos.find(e => e.id === contrato.eventoId);
-    
-    showSection('gerador', dbState, new Date());
-    
-    if (cliente) {
-        document.getElementById('clientName').value = cliente.nome || '';
-        document.getElementById('clientCPF').value = cliente.documento || '';
-        document.getElementById('clientAddress').value = cliente.endereco || '';
-        document.getElementById('clientEmail').value = cliente.email || '';
-        document.getElementById('clientPhone').value = cliente.telefone || '';
-    }
-    if (evento) {
-        document.getElementById('eventDate').value = evento.data || '';
-        document.getElementById('eventLocal').value = evento.local || '';
-        document.getElementById('package').value = evento.descricao || '';
-        
-        let contractTypeValue = '4'; 
-        if (evento.tipo === 'Infantil') contractTypeValue = '1';
-        if (evento.tipo === 'Casamento') contractTypeValue = '2';
-        
-        const contractTypeSelect = document.getElementById('contractType');
-        contractTypeSelect.value = contractTypeValue;
-        contractTypeSelect.dispatchEvent(new Event('change'));
-    }
-    if (contrato) {
-        document.getElementById('value').value = contrato.valorTotal || '';
-        document.getElementById('paymentMethod').value = contrato.formaPagamento || '';
-    }
-
-    document.getElementById('clientName').focus();
-    alert("Dados do contrato pré-preenchidos! Verifique e gere o contrato.");
-}
-
-export function abrirNovoEventoDoCalendario(data) {
-    window.app.showSection('eventos'); 
-    document.getElementById('evento-data').value = data;
-    document.getElementById('evento-nome').focus();
-}
-
-export function viewEntregaFromAtraso(eventId, dbState) {
-    document.getElementById('entrega-evento-select').value = eventId;
-    
-    const evento = dbState.eventos.find(e => e.id === eventId);
-    if(evento) {
-        document.getElementById('entrega-default-view').classList.add('hidden');
-        document.getElementById('entrega-management-area').classList.remove('hidden');
-        renderEntregaCards(evento, dbState);
-    }
-}
-
-// --- Funções de Controle de Modais ---
-
-export function openDossieModal(contratoId, dbState) {
-    const contrato = dbState.contratos.find(c => c.id === contratoId);
-    if (!contrato) {
-        console.error("Contrato não encontrado:", contratoId);
-        return;
-    }
-
-    const cliente = dbState.clientes.find(c => c.id === contrato.clienteId) || {};
-    const evento = dbState.eventos.find(e => e.id === contrato.eventoId) || {};
-    const pagamentos = dbState.financeiro.filter(p => p.contratoId === contratoId);
-    const custos = dbState.custos.filter(c => c.eventoId === contrato.eventoId);
-
-    const valorTotal = parseFloat(contrato.valorTotal || 0);
-    const totalPago = pagamentos.reduce((acc, p) => acc + (parseFloat(p.valor) || 0), 0);
-    const restante = valorTotal - totalPago;
-    const totalCusto = custos.reduce((acc, c) => acc + (parseFloat(c.valor) || 0), 0);
-    const lucroLiquido = valorTotal - totalCusto;
-    const dataEventoFormatada = evento.data ? new Date(evento.data + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
-
-    document.getElementById('dossie-evento-nome').innerText = evento.nome || 'N/A';
-    document.getElementById('dossie-cliente-nome').innerText = cliente.nome || 'N/A';
-    document.getElementById('dossie-cliente-contato').innerText = `${cliente.telefone || 'Sem telefone'} | ${cliente.email || 'Sem email'}`;
-    document.getElementById('dossie-evento-data').innerText = dataEventoFormatada;
-    document.getElementById('dossie-evento-local').innerText = evento.local || 'N/A';
-    
-    const linkEl = document.getElementById('dossie-contrato-link');
-    if (contrato.link) {
-        linkEl.innerHTML = `<a href="${contrato.link}" target="_blank" class="hover:underline">${contrato.link}</a>`;
-    } else {
-        linkEl.innerText = 'Nenhum link salvo';
-    }
-
-    document.getElementById('dossie-valor-contrato').innerText = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
-    document.getElementById('dossie-total-pago').innerText = `R$ ${totalPago.toFixed(2).replace('.', ',')}`;
-    document.getElementById('dossie-valor-restante').innerText = `R$ ${restante.toFixed(2).replace('.', ',')}`;
-    
-    const pagamentosListaEl = document.getElementById('dossie-pagamentos-lista');
-    if (pagamentos.length > 0) {
-        pagamentosListaEl.innerHTML = pagamentos.map(p => {
-            const dataPag = new Date(p.data + 'T00:00:00').toLocaleDateString('pt-BR');
-            return `<div class="flex justify-between items-center text-gray-700">
-                        <span>${dataPag} (${p.metodo})</span>
-                        <span class="font-medium text-green-600">+ R$ ${parseFloat(p.valor).toFixed(2).replace('.', ',')}</span>
-                    </div>`;
-        }).join('');
-    } else {
-        pagamentosListaEl.innerHTML = `<p class="text-gray-500">Nenhum pagamento registrado.</p>`;
-    }
-
-    document.getElementById('dossie-lucro-valor').innerText = `+ R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
-    document.getElementById('dossie-lucro-custos').innerText = `- R$ ${totalCusto.toFixed(2).replace('.', ',')}`;
-    document.getElementById('dossie-lucro-liquido').innerText = `R$ ${lucroLiquido.toFixed(2).replace('.', ',')}`;
-    document.getElementById('dossie-lucro-liquido').className = `font-bold text-3xl ${lucroLiquido < 0 ? 'text-red-600' : 'text-gray-900'}`;
-    
-    const custosListaEl = document.getElementById('dossie-custos-lista');
-    if (custos.length > 0) {
-        custosListaEl.innerHTML = custos.map(c => {
-            const fotografo = dbState.fotografos.find(f => f.id === c.fotografoId);
-            const desc = fotografo ? `${c.descricao} (${fotografo.nome})` : c.descricao;
-            return `<div class="flex justify-between items-center text-gray-700">
-                        <span>${desc}</span>
-                        <span class="font-medium text-red-600">- R$ ${parseFloat(c.valor).toFixed(2).replace('.', ',')}</span>
-                    </div>`;
-        }).join('');
-    } else {
-        custosListaEl.innerHTML = `<p class="text-gray-500">Nenhum custo registrado.</p>`;
-    }
-
-    const entregasListaEl = document.getElementById('dossie-entregas-lista');
-    const tiposEntrega = ['previa', 'midia', 'album'];
-    entregasListaEl.innerHTML = tiposEntrega.map(tipo => {
-        const info = getEntregaInfo(evento, tipo);
-        const statusColor = info.status === 'entregue' ? 'text-green-600' : (info.status === 'atrasado' || info.status === 'hoje' ? 'text-red-600' : 'text-gray-700');
-        const statusText = info.status === 'entregue' ? `Entregue em ${info.data}` : info.text;
-
-        return `<div class="p-2 border-b">
-                    <span class="font-semibold text-gray-900">${info.title}</span>
-                    <p class="text-sm ${statusColor}">${statusText}</p>
-                    <p class="text-xs text-gray-500">${info.deadline}</p>
-                </div>`;
-    }).join('');
-
-    document.getElementById('dossie-modal').classList.remove('hidden');
-    document.getElementById('dossie-modal').classList.add('flex');
-}
-
-export function closeDossieModal() {
-    document.getElementById('dossie-modal').classList.add('hidden');
-    document.getElementById('dossie-modal').classList.remove('flex');
-    document.getElementById('dossie-content').scrollTop = 0; 
-}
-
-export function openAddPaymentModal(contratoId) {
-    document.getElementById('payment-contrato-id').value = contratoId;
-    document.getElementById('payment-date').valueAsDate = new Date();
-    document.getElementById('add-payment-modal').classList.remove('hidden');
-    document.getElementById('add-payment-modal').classList.add('flex');
-    document.getElementById('payment-amount').focus();
-}
-
-export function closeAddPaymentModal() {
-    document.getElementById('add-payment-modal').classList.add('hidden');
-    document.getElementById('add-payment-modal').classList.remove('flex');
-    document.getElementById('add-payment-form').reset();
-}
-
-export function openEditContratoModal(contratoId, dbState) {
-    const contrato = dbState.contratos.find(c => c.id === contratoId);
-    if (!contrato) {
-        alert("Erro: Contrato não encontrado.");
-        return;
-    }
-    
-    document.getElementById('edit-contrato-id').value = contratoId;
-    document.getElementById('edit-contrato-status').value = contrato.status || 'Proposta';
-    document.getElementById('edit-contrato-link').value = contrato.link || '';
-    document.getElementById('edit-contrato-forma-pagamento').value = contrato.formaPagamento || '';
-    
-    document.getElementById('edit-contract-modal').classList.remove('hidden');
-    document.getElementById('edit-contract-modal').classList.add('flex');
-}
-
-export function closeEditContratoModal() {
-    document.getElementById('edit-contract-modal').classList.add('hidden');
-    document.getElementById('edit-contract-modal').classList.remove('flex');
-    document.getElementById('edit-contract-form').reset();
-}
-
-export function showLoginError(message) {
-    const loginError = document.getElementById('login-error');
-    loginError.textContent = message;
-    loginError.classList.remove('hidden');
-}
-
-export function hideLoginError() {
-    document.getElementById('login-error').classList.add('hidden');
-}
-
-// --- NOVAS FUNÇÕES DE TEMPLATE (Fase 1 - Gerenciador de Templates) ---
-
-export function renderTemplates(dbState) {
-    const lista = document.getElementById('lista-templates');
-    if (!lista) return;
-
-    if (!dbState.templates || dbState.templates.length === 0) {
-        lista.innerHTML = '<p class="text-sm text-gray-500">Nenhum template salvo.</p>';
-        return;
-    }
-
-    lista.innerHTML = dbState.templates.map(template => `
-        <div class="flex justify-between items-center p-2 border rounded-md hover:bg-gray-50">
-            <span class="font-medium text-sm text-gray-700 truncate" title="${template.titulo}">${template.titulo}</span>
-            <div class="flex-shrink-0 flex gap-2 ml-2">
-                <button onclick="window.app.editTemplate('${template.id}')" class="text-blue-500 hover:text-blue-700" title="Editar">
-                    <i data-lucide="edit-2" class="w-4 h-4"></i>
-                </button>
-                <button onclick="window.app.deleteItem('templates', '${template.id}')" class="text-red-500 hover:text-red-700" title="Excluir">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                </button>
-            </div>
-        </div>
-    `).join('');
-    
-    if (window.lucide) window.lucide.createIcons();
-}
-
-export function populateTemplateForm(template) {
-    document.getElementById('template-id').value = template.id;
-    document.getElementById('template-titulo').value = template.titulo;
-    
-    // ATUALIZAÇÃO: Usa innerHTML para o editor rico
-    document.getElementById('template-corpo').innerHTML = template.corpo;
-    
-    // 1. Define o Tipo
-    const typeSelect = document.getElementById('template-link-tipo');
-    typeSelect.value = template.link_tipo || '';
-    
-    // 2. Preenche a lista de pacotes
-    if (window.app && window.app.getDbState) {
-        const dbState = window.app.getDbState();
-        updatePackageSelect('template-link-pacote', template.link_tipo, dbState);
-    }
-
-    // 3. Define o Pacote Selecionado
-    setTimeout(() => {
-        document.getElementById('template-link-pacote').value = template.link_pacote || '';
-    }, 50);
-    
-    document.getElementById('section-templates').scrollIntoView({ behavior: 'smooth' });
-}
-
-export function clearTemplateForm() {
-    document.getElementById('form-template').reset();
-    document.getElementById('template-id').value = ''; 
-}
-
-// --- NOVAS FUNÇÕES DE PACOTES (Fase 1 - Gerenciador de Pacotes) ---
-
-export function renderPacotes(dbState) {
-    const container = document.getElementById('lista-pacotes-container');
-    if (!container) return;
-
-    if (!dbState.pacotes || dbState.pacotes.length === 0) {
-        container.innerHTML = '<p class="text-gray-500">Nenhum pacote cadastrado.</p>';
-        return;
-    }
-    
-    // 1. Agrupa os pacotes por categoria
-    const pacotesAgrupados = dbState.pacotes.reduce((acc, pacote) => {
-        const category = pacote.package_category_name || "Sem Categoria";
-        if (!acc[category]) {
-            acc[category] = [];
-        }
-        acc[category].push(pacote);
-        return acc;
-    }, {});
-
-    // 2. Renderiza o HTML
-    container.innerHTML = Object.keys(pacotesAgrupados).map(categoryName => {
-        
-        // Renderiza os itens (pacotes) para esta categoria
-        const itemsHtml = pacotesAgrupados[categoryName].map(pacote => {
-            const valorFormatado = (pacote.package_value || 0).toFixed(2).replace('.', ',');
-            
-            return `
-                <div class="flex justify-between items-center p-2 border-t">
-                    <div>
-                        <span class="font-medium text-sm text-gray-700">${pacote.package_name}</span>
-                        <span class="ml-2 text-sm text-green-700 font-bold">R$ ${valorFormatado}</span>
-                    </div>
-                    <div class="flex-shrink-0 flex gap-2 ml-2">
-                        <button onclick="window.app.editPacote('${pacote.id}')" class="text-blue-500 hover:text-blue-700" title="Editar">
-                            <i data-lucide="edit-2" class="w-4 h-4"></i>
-                        </button>
-                        <button onclick="window.app.deleteItem('pacotes', '${pacote.id}')" class="text-red-500 hover:text-red-700" title="Excluir">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        // Retorna o bloco da categoria
-        return `
-            <div class="border border-gray-200 rounded-lg overflow-hidden">
-                <h3 class="text-lg font-bold text-gray-900 bg-gray-50 p-3 border-b">${categoryName}</h3>
-                <div class="space-y-1">
-                    ${itemsHtml}
-                </div>
-            </div>
-        `;
-        
-    }).join('');
-
-    // Recarrega ícones após renderizar
-    if (window.lucide) window.lucide.createIcons();
-}
-
-export function populatePacoteForm(pacote) {
-    document.getElementById('pacote-id').value = pacote.id;
-    document.getElementById('pacote-tipo-vinculo').value = pacote.package_category_id || '';
-    document.getElementById('pacote-nome').value = pacote.package_name || '';
-    document.getElementById('pacote-valor').value = pacote.package_value || 0;
-}
-
-export function clearPacoteForm() {
-    document.getElementById('form-pacote').reset();
-    document.getElementById('pacote-id').value = ''; 
-}
+// ...
