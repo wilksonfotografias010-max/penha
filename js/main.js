@@ -1,6 +1,9 @@
 // js/main.js
 
-// ... (Imports existentes) ...
+// ######################################################
+// ARQUIVO 7: O CÉREBRO MESTRE (main.js)
+// ######################################################
+
 import { setupAuthListeners } from './auth.js';
 import * as store from './store.js'; 
 import * as ui from './ui.js';       
@@ -8,7 +11,7 @@ import { initGeradorListeners } from './geradorContrato.js';
 import { initDragAndDrop } from './kanban.js'; 
 
 let userId = null;
-// ATUALIZADO: adicionado configuracoes: []
+// ATUALIZADO: Inclui 'configuracoes'
 let dbState = { 
     eventos: [], clientes: [], contratos: [], fotografos: [], 
     financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], configuracoes: []
@@ -18,7 +21,6 @@ let calendarioData = new Date();
 let selectedEventIdForEntrega = null; 
 
 function onDataChange(newState) {
-    // ... (mesmo conteúdo anterior) ...
     dbState = newState; 
     
     ui.updateDashboard(dbState);
@@ -36,7 +38,7 @@ function onDataChange(newState) {
     ui.populateContratoClienteSelect(dbState);
     ui.populateEntregaEventoSelect(dbState, selectedEventIdForEntrega);
     
-    // ATUALIZADO: Adiciona renderização das configurações de prazo se estiver na seção entrega
+    // Atualiza cards de entrega se houver evento selecionado
     if (selectedEventIdForEntrega) {
         const evento = dbState.eventos.find(e => e.id === selectedEventIdForEntrega);
         ui.renderEntregaCards(evento, dbState);
@@ -44,7 +46,7 @@ function onDataChange(newState) {
         ui.renderEntregasAtrasadas(dbState);
     }
     
-    // NOVO: Renderiza a UI de configurações de prazo se a seção entrega estiver visível
+    // NOVO: Renderiza configurações de prazo se a tela estiver visível
     const entregaSection = document.getElementById('section-entrega');
     if (entregaSection && !entregaSection.classList.contains('hidden')) {
         ui.renderConfigPrazos(dbState);
@@ -62,7 +64,6 @@ function onDataChange(newState) {
     if (window.lucide) window.lucide.createIcons();
 }
 
-// ... (onLogin e onLogout iguais, certifique-se que o dbState no onLogout tenha configuracoes: []) ...
 function onLogin(user) {
     userId = user.uid;
     document.getElementById('login-overlay').classList.add('hidden');
@@ -89,8 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setupAuthListeners(onLogin, onLogout);
     initDragAndDrop(); 
     
+    // OBJETO GLOBAL APP (Exposto para o HTML usar via onclick)
     window.app = {
-        // ... (Mantenha as funções existentes) ...
         showSection: (sectionId) => ui.showSection(sectionId, dbState, calendarioData),
         openDossieModal: (contratoId) => ui.openDossieModal(contratoId, dbState),
         openDossieModalFromEvento: (eventoId) => {
@@ -128,7 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
         getDbState: () => dbState,
         updatePackageSelect: ui.updatePackageSelect, 
         deleteItem: (collectionName, id) => {
-             // ... (Lógica de deleteItem igual) ...
             if (!userId) return;
             let message = `Tem certeza que deseja excluir este item?`;
             
@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
             store.updateEventoColuna(userId, eventoId, novaColunaId).catch(e => alert(e.message));
         },
         
-        // --- NOVAS FUNÇÕES EXPOSTAS ---
+        // --- NOVAS FUNÇÕES EXPOSTAS (Se faltar isso, dá erro) ---
         marcarEntregue: (eventId, tipo) => {
             if (!userId) return;
             store.marcarEntregue(userId, eventId, tipo).catch(e => alert(e.message));
@@ -184,12 +184,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // -----------------------------
 
         exportarCSV: () => {
-             // ... (exportarCSV igual) ...
             if (!dbState.eventos || dbState.eventos.length === 0) {
                 alert("Não há dados suficientes para exportar.");
                 return;
             }
-            // ... (código do CSV)
+            
              let csvContent = "Evento;Data do Evento;Cliente;Email;Telefone;Tipo;Local;Pacote/Contrato;Valor Contrato;Total Pago;Restante;Total Custos;Lucro Liquido;Status Previa;Status Midia;Status Album\n";
 
             dbState.eventos.forEach(evento => {
@@ -252,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initGeradorListeners(); 
 
-    // ... (listeners existentes iguais) ...
+    // Listeners de Formulários
     const templateTypeSelect = document.getElementById('template-link-tipo');
     if (templateTypeSelect) {
         templateTypeSelect.addEventListener('change', (e) => {
