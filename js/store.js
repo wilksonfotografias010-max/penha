@@ -31,7 +31,7 @@ export function setupRealtimeListeners(userId, onDataChangeCallback) {
         financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], configuracoes: [] 
     };
     
-    // ADICIONADO: 'configuracoes' na lista de coleções
+    // ADICIONADO: 'configuracoes' na lista de coleções para monitorar
     const collections = ['eventos', 'clientes', 'contratos', 'fotografos', 'financeiro', 'custos', 'colunas', 'templates', 'pacotes', 'configuracoes'];
     let unsubscribeListeners = [];
 
@@ -41,7 +41,7 @@ export function setupRealtimeListeners(userId, onDataChangeCallback) {
             
             dbState[col] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-            // Ordenações existentes mantidas
+            // Ordenações
             if (col === 'clientes') {
                 dbState.clientes.sort((a, b) => a.nome.localeCompare(b.nome));
             }
@@ -74,7 +74,6 @@ export function setupRealtimeListeners(userId, onDataChangeCallback) {
     return unsubscribeListeners;
 }
 
-// ... (Mantenha as funções handleFormSubmit e deleteSingleItem iguais) ...
 export async function handleFormSubmit(userId, collectionName, data) {
     if (!userId) { console.error("Usuário não autenticado."); return; }
     try {
@@ -94,9 +93,7 @@ export async function deleteSingleItem(userId, collectionName, id) {
         throw new Error(`Falha ao deletar item de ${collectionName}`);
     }
 }
-// ...
 
-// ... (Mantenha updateEventoColuna igual) ...
 export async function updateEventoColuna(userId, eventoId, novaColunaId) {
     if (!userId || !eventoId || !novaColunaId) return;
     const docRef = doc(db, `users/${userId}/eventos/${eventoId}`);
@@ -108,11 +105,8 @@ export async function updateEventoColuna(userId, eventoId, novaColunaId) {
     }
 }
 
-// --- MODIFICADO: FUNÇÕES DE ENTREGA ---
+// --- FUNÇÕES DE ENTREGA E CONFIGURAÇÃO ---
 
-/**
- * Marca entrega (Atualizado para permitir desfazer se necessário, embora tenhamos criado reverter separada)
- */
 export async function marcarEntregue(userId, eventId, tipo) {
     if (!userId || !eventId || !tipo) return;
     const docRef = doc(db, `users/${userId}/eventos/${eventId}`);
@@ -129,9 +123,6 @@ export async function marcarEntregue(userId, eventId, tipo) {
     }
 }
 
-/**
- * NOVO: Reverte o status de entrega para Pendente
- */
 export async function reverterEntrega(userId, eventId, tipo) {
     if (!userId || !eventId || !tipo) return;
     const docRef = doc(db, `users/${userId}/eventos/${eventId}`);
@@ -148,18 +139,14 @@ export async function reverterEntrega(userId, eventId, tipo) {
     }
 }
 
-/**
- * NOVO: Atualiza a data de prazo específica de um evento
- */
 export async function updateEventoPrazo(userId, eventId, tipo, novaData) {
     if (!userId || !eventId || !tipo) return;
     const docRef = doc(db, `users/${userId}/eventos/${eventId}`);
-    // Salva no campo ex: prazo_previa, prazo_midia, prazo_album
     const fieldName = `prazo_${tipo}`;
     
     try {
         await updateDoc(docRef, {
-            [fieldName]: novaData // Pode ser null para resetar
+            [fieldName]: novaData 
         });
     } catch (error) {
         console.error("Erro ao atualizar prazo: ", error);
@@ -167,12 +154,8 @@ export async function updateEventoPrazo(userId, eventId, tipo, novaData) {
     }
 }
 
-/**
- * NOVO: Salva as configurações globais de prazos
- */
 export async function saveConfigPrazos(userId, prazosData) {
     if (!userId) return;
-    // Usamos um ID fixo 'global_prazos' para facilitar
     const docRef = doc(db, `users/${userId}/configuracoes/global_prazos`);
     try {
         await setDoc(docRef, prazosData, { merge: true });
@@ -182,7 +165,8 @@ export async function saveConfigPrazos(userId, prazosData) {
     }
 }
 
-// ... (Mantenha updateContrato, saveTemplate, savePacote e as funções de delete cascade iguais) ...
+// --- FUNÇÕES GERAIS ---
+
 export async function updateContrato(userId, contratoId, dataToUpdate) {
     if (!userId || !contratoId) return;
     const docRef = doc(db, `users/${userId}/contratos/${contratoId}`);
