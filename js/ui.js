@@ -862,13 +862,19 @@ export function openEditContratoModal(contratoId, dbState) {
     if (!contrato) return;
 
     document.getElementById('edit-contrato-id').value = contrato.id;
+    
+    // Preenche Valor
+    document.getElementById('edit-contrato-valor').value = contrato.valorTotal || 0;
+    
+    // NOVO: Preenche Histórico (ou vazio se não existir)
+    document.getElementById('edit-contrato-historico').value = contrato.historico_valores || '';
+    
     document.getElementById('edit-contrato-status').value = contrato.status;
     document.getElementById('edit-contrato-link').value = contrato.link || '';
     document.getElementById('edit-contrato-forma-pagamento').value = contrato.formaPagamento || '';
 
     document.getElementById('modal-edit-contrato').classList.remove('hidden');
 }
-
 export function closeEditContratoModal() {
     document.getElementById('modal-edit-contrato').classList.add('hidden');
 }
