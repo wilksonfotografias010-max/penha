@@ -1,9 +1,6 @@
 // js/main.js
 
-// ######################################################
-// ARQUIVO 7: O CÉREBRO MESTRE (main.js) - ORDEM CORRIGIDA
-// ######################################################
-
+// ... (Imports existentes) ...
 import { setupAuthListeners } from './auth.js';
 import * as store from './store.js'; 
 import * as ui from './ui.js';       
@@ -11,15 +8,17 @@ import { initGeradorListeners } from './geradorContrato.js';
 import { initDragAndDrop } from './kanban.js'; 
 
 let userId = null;
+// ATUALIZADO: adicionado configuracoes: []
 let dbState = { 
     eventos: [], clientes: [], contratos: [], fotografos: [], 
-    financeiro: [], custos: [], colunas: [], templates: [], pacotes: [] 
+    financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], configuracoes: []
 };
 let unsubscribeListeners = []; 
 let calendarioData = new Date(); 
 let selectedEventIdForEntrega = null; 
 
 function onDataChange(newState) {
+    // ... (mesmo conteúdo anterior) ...
     dbState = newState; 
     
     ui.updateDashboard(dbState);
@@ -37,6 +36,7 @@ function onDataChange(newState) {
     ui.populateContratoClienteSelect(dbState);
     ui.populateEntregaEventoSelect(dbState, selectedEventIdForEntrega);
     
+    // ATUALIZADO: Adiciona renderização das configurações de prazo se estiver na seção entrega
     if (selectedEventIdForEntrega) {
         const evento = dbState.eventos.find(e => e.id === selectedEventIdForEntrega);
         ui.renderEntregaCards(evento, dbState);
@@ -44,6 +44,12 @@ function onDataChange(newState) {
         ui.renderEntregasAtrasadas(dbState);
     }
     
+    // NOVO: Renderiza a UI de configurações de prazo se a seção entrega estiver visível
+    const entregaSection = document.getElementById('section-entrega');
+    if (entregaSection && !entregaSection.classList.contains('hidden')) {
+        ui.renderConfigPrazos(dbState);
+    }
+
     const financeiroSection = document.getElementById('section-financeiro');
     if (financeiroSection && !financeiroSection.classList.contains('hidden')) {
         ui.renderContasAReceber(dbState);
@@ -56,6 +62,7 @@ function onDataChange(newState) {
     if (window.lucide) window.lucide.createIcons();
 }
 
+// ... (onLogin e onLogout iguais, certifique-se que o dbState no onLogout tenha configuracoes: []) ...
 function onLogin(user) {
     userId = user.uid;
     document.getElementById('login-overlay').classList.add('hidden');
@@ -73,18 +80,17 @@ function onLogout() {
     document.getElementById('auth-status').innerText = "Desconectado";
     unsubscribeListeners.forEach(unsub => unsub());
     unsubscribeListeners = [];
-    dbState = { eventos: [], clientes: [], contratos: [], fotografos: [], financeiro: [], custos: [], colunas: [], templates: [], pacotes: [] };
+    dbState = { eventos: [], clientes: [], contratos: [], fotografos: [], financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], configuracoes: [] };
     onDataChange(dbState); 
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     
     setupAuthListeners(onLogin, onLogout);
-    // initGeradorListeners(); <--- REMOVIDO DAQUI (Estava muito cedo)
     initDragAndDrop(); 
     
-    // Cria o objeto global window.app PRIMEIRO
     window.app = {
+        // ... (Mantenha as funções existentes) ...
         showSection: (sectionId) => ui.showSection(sectionId, dbState, calendarioData),
         openDossieModal: (contratoId) => ui.openDossieModal(contratoId, dbState),
         openDossieModalFromEvento: (eventoId) => {
@@ -101,34 +107,28 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedEventIdForEntrega = eventId;
             ui.viewEntregaFromAtraso(eventId, dbState);
         },
-        
         editTemplate: (templateId) => {
             if (!templateId) return;
             const template = dbState.templates.find(t => t.id === templateId);
             if (template) ui.populateTemplateForm(template);
         },
         clearTemplateForm: () => ui.clearTemplateForm(),
-        
         editPacote: (pacoteId) => {
             if (!pacoteId) return;
             const pacote = dbState.pacotes.find(p => p.id === pacoteId);
             if (pacote) ui.populatePacoteForm(pacote);
         },
         clearPacoteForm: () => ui.clearPacoteForm(),
-        
         editColumn: (columnId, currentName) => {
             const newName = prompt("Novo nome para a coluna:", currentName);
             if (newName && newName.trim() !== "" && newName !== currentName) {
-                store.updateColumn(userId, columnId, newName.trim())
-                    .catch(e => alert(e.message));
+                store.updateColumn(userId, columnId, newName.trim()).catch(e => alert(e.message));
             }
         },
-
         getDbState: () => dbState,
-        
         updatePackageSelect: ui.updatePackageSelect, 
-
         deleteItem: (collectionName, id) => {
+             // ... (Lógica de deleteItem igual) ...
             if (!userId) return;
             let message = `Tem certeza que deseja excluir este item?`;
             
@@ -159,18 +159,38 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!userId) return;
             store.updateEventoColuna(userId, eventoId, novaColunaId).catch(e => alert(e.message));
         },
+        
+        // --- NOVAS FUNÇÕES EXPOSTAS ---
         marcarEntregue: (eventId, tipo) => {
             if (!userId) return;
             store.marcarEntregue(userId, eventId, tipo).catch(e => alert(e.message));
         },
+        reverterEntrega: (eventId, tipo) => {
+            if (!userId) return;
+            if(confirm("Deseja marcar esta etapa como NÃO entregue novamente?")) {
+                store.reverterEntrega(userId, eventId, tipo).catch(e => alert(e.message));
+            }
+        },
+        updateEventoPrazo: (eventId, tipo, novaData) => {
+            if (!userId) return;
+            store.updateEventoPrazo(userId, eventId, tipo, novaData).catch(e => alert(e.message));
+        },
+        saveConfigPrazos: (prazos) => {
+            if (!userId) return;
+            store.saveConfigPrazos(userId, prazos)
+                .then(() => alert("Configurações padrão salvas com sucesso!"))
+                .catch(e => alert(e.message));
+        },
+        // -----------------------------
 
         exportarCSV: () => {
+             // ... (exportarCSV igual) ...
             if (!dbState.eventos || dbState.eventos.length === 0) {
                 alert("Não há dados suficientes para exportar.");
                 return;
             }
-
-            let csvContent = "Evento;Data do Evento;Cliente;Email;Telefone;Tipo;Local;Pacote/Contrato;Valor Contrato;Total Pago;Restante;Total Custos;Lucro Liquido;Status Previa;Status Midia;Status Album\n";
+            // ... (código do CSV)
+             let csvContent = "Evento;Data do Evento;Cliente;Email;Telefone;Tipo;Local;Pacote/Contrato;Valor Contrato;Total Pago;Restante;Total Custos;Lucro Liquido;Status Previa;Status Midia;Status Album\n";
 
             dbState.eventos.forEach(evento => {
                 const cliente = dbState.clientes.find(c => c.id === evento.clienteId) || {};
@@ -230,11 +250,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- INICIALIZA O GERADOR AGORA (Depois que window.app existe) ---
     initGeradorListeners(); 
 
-    // --- LISTENERS GERAIS ---
-
+    // ... (listeners existentes iguais) ...
     const templateTypeSelect = document.getElementById('template-link-tipo');
     if (templateTypeSelect) {
         templateTypeSelect.addEventListener('change', (e) => {
@@ -266,23 +284,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Listener: Salvar Template (ATUALIZADO PARA EDITOR RICO)
     const templateForm = document.getElementById('form-template');
     if (templateForm) {
         templateForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const templateId = e.target.elements['template-id'].value;
-            
-            // ATENÇÃO: Agora pegamos o .innerHTML do div, não o .value
             const corpoContent = document.getElementById('template-corpo').innerHTML;
-
             const data = {
                 titulo: e.target.elements['template-titulo'].value,
-                corpo: corpoContent, // <-- AQUI MUDOU
+                corpo: corpoContent, 
                 link_tipo: e.target.elements['template-link-tipo'].value,
                 link_pacote: e.target.elements['template-link-pacote'].value
             };
-            
             store.saveTemplate(userId, data, templateId || null)
                 .then(() => ui.clearTemplateForm())
                 .catch(e => alert("Falha ao salvar template: " + e.message));
@@ -415,4 +428,3 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('payment-date').valueAsDate = new Date();
     document.getElementById('custo-data').valueAsDate = new Date();
 });
-
