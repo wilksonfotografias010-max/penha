@@ -333,26 +333,34 @@
 
             <div id="section-financeiro" class="content-section hidden">
                 <h1 class="text-2xl font-bold mb-6 text-gray-800">Financeiro</h1>
+                
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-lg shadow-md">
                         <h2 class="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Contas a Receber (Pendentes)</h2>
                         <div class="overflow-y-auto max-h-64">
                             <table class="w-full text-sm">
-                                <thead class="text-left text-gray-500 bg-gray-50 sticky top-0"><tr><th>Cliente</th><th>Evento</th><th>Falta</th><th>Ação</th></tr></thead>
+                                <thead class="text-left text-gray-500 bg-gray-50 sticky top-0">
+                                    <tr><th>Cliente</th><th>Evento</th><th>Falta</th><th>Ação</th></tr>
+                                </thead>
                                 <tbody id="lista-contas-a-receber"></tbody>
                             </table>
                         </div>
                     </div>
+
                     <div class="bg-white p-6 rounded-lg shadow-md">
                          <h2 class="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Fluxo de Caixa (Últimos 12 Meses)</h2>
-                         <div class="relative h-64"><canvas id="fluxo-caixa-chart"></canvas></div>
+                         <div class="relative h-64">
+                             <canvas id="fluxo-caixa-chart"></canvas>
+                         </div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-white p-6 rounded-lg shadow-md">
                         <h2 class="text-lg font-semibold mb-4">Registrar Pagamento (Entrada)</h2>
-                        <button onclick="window.app.openAddPaymentModal()" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">+ Novo Pagamento</button>
+                        <button onclick="window.app.openAddPaymentModal()" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
+                            + Novo Pagamento
+                        </button>
                     </div>
                     
                     <div class="bg-white p-6 rounded-lg shadow-md">
@@ -360,11 +368,17 @@
                         <form id="form-custo" class="space-y-3">
                             <select name="custo-evento" id="custo-evento" class="w-full p-2 border rounded text-sm"><option>Carregando...</option></select>
                             <select name="custo-fotografo" id="custo-fotografo" class="w-full p-2 border rounded text-sm"><option>Fotógrafo...</option></select>
-                            <input type="text" name="custo-descricao" placeholder="Descrição (ex: Álbum, Gasolina)" class="w-full p-2 border rounded text-sm" required>
+                            <input type="text" name="custo-descricao" placeholder="Descrição (ex: Aluguel, Internet)" class="w-full p-2 border rounded text-sm" required>
                             <div class="flex gap-2">
                                 <input type="number" name="custo-valor" placeholder="Valor" step="0.01" class="w-full p-2 border rounded text-sm" required>
                                 <input type="date" name="custo-data" id="custo-data" class="w-full p-2 border rounded text-sm" required>
                             </div>
+                            
+                            <div class="flex items-center bg-gray-50 p-2 rounded border">
+                                <input type="checkbox" id="custo-repetir" name="custo-repetir" class="w-4 h-4 text-blue-600 rounded">
+                                <label for="custo-repetir" class="ml-2 text-sm text-gray-700 font-medium">Custo Fixo (Repetir todo mês)</label>
+                            </div>
+
                             <button type="submit" class="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600 text-sm">Salvar Saída</button>
                         </form>
                     </div>
@@ -374,7 +388,14 @@
                     <h2 class="text-lg font-semibold p-4 border-b">Histórico de Entradas</h2>
                     <table class="w-full min-w-max">
                         <thead class="bg-gray-50">
-                            <tr><th class="p-4 text-left">Data</th><th class="p-4 text-left">Cliente</th><th class="p-4 text-left">Evento</th><th class="p-4 text-left">Método</th><th class="p-4 text-left">Valor</th><th class="p-4 text-left">Ações</th></tr>
+                            <tr>
+                                <th class="p-4 text-left">Data</th>
+                                <th class="p-4 text-left">Cliente</th>
+                                <th class="p-4 text-left">Evento</th>
+                                <th class="p-4 text-left">Método</th>
+                                <th class="p-4 text-left">Valor</th>
+                                <th class="p-4 text-left">Ações</th>
+                            </tr>
                         </thead>
                         <tbody id="lista-financeiro"></tbody>
                     </table>
@@ -384,13 +405,18 @@
                     <h2 class="text-lg font-semibold p-4 border-b">Histórico de Saídas (Custos)</h2>
                     <table class="w-full min-w-max">
                         <thead class="bg-gray-50">
-                            <tr><th class="p-4 text-left">Data</th><th class="p-4 text-left">Descrição</th><th class="p-4 text-left">Evento</th><th class="p-4 text-left">Fotógrafo</th><th class="p-4 text-left">Valor</th><th class="p-4 text-left">Ações</th></tr>
+                            <tr>
+                                <th class="p-4 text-left">Data</th>
+                                <th class="p-4 text-left">Descrição</th>
+                                <th class="p-4 text-left">Evento</th>
+                                <th class="p-4 text-left">Valor</th>
+                                <th class="p-4 text-left">Status/Recorrência</th> <th class="p-4 text-left">Ações</th>
+                            </tr>
                         </thead>
                         <tbody id="lista-custos"></tbody>
                     </table>
                 </div>
             </div>
-
             <div id="section-calendario" class="content-section hidden">
                 <h1 class="text-2xl font-bold mb-6 text-gray-800">Calendário</h1>
                 <div class="bg-white p-6 rounded-lg shadow-md">
