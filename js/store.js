@@ -20,14 +20,15 @@ import {
 export function setupRealtimeListeners(userId, onDataChangeCallback) {
     if (!userId) return [];
 
-    // Estado inicial com todas as coleções
+    // Estado inicial (ADICIONADO: vendedores)
     const dbState = { 
         eventos: [], clientes: [], contratos: [], fotografos: [], 
         financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], 
-        configuracoes: [], categorias: [] 
+        configuracoes: [], categorias: [], vendedores: [] 
     };
     
-    const collections = ['eventos', 'clientes', 'contratos', 'fotografos', 'financeiro', 'custos', 'colunas', 'templates', 'pacotes', 'configuracoes', 'categorias'];
+    // Lista de coleções (ADICIONADO: vendedores)
+    const collections = ['eventos', 'clientes', 'contratos', 'fotografos', 'financeiro', 'custos', 'colunas', 'templates', 'pacotes', 'configuracoes', 'categorias', 'vendedores'];
     let unsubscribeListeners = [];
 
     collections.forEach(col => {
@@ -43,6 +44,8 @@ export function setupRealtimeListeners(userId, onDataChangeCallback) {
             if (col === 'custos') dbState.custos.sort((a, b) => new Date(b.data) - new Date(a.data));
             if (col === 'colunas') dbState.colunas.sort((a, b) => a.ordem - b.ordem);
             if (col === 'categorias') dbState.categorias.sort((a, b) => a.nome.localeCompare(b.nome));
+            // ADICIONADO: Ordenação de vendedores
+            if (col === 'vendedores') dbState.vendedores.sort((a, b) => a.nome.localeCompare(b.nome));
             
             if (col === 'pacotes') {
                 dbState.pacotes.sort((a, b) => {
@@ -62,7 +65,6 @@ export function setupRealtimeListeners(userId, onDataChangeCallback) {
     return unsubscribeListeners;
 }
 /* [FIM: STORE_LISTENERS] */
-
 
 /* [INICIO: STORE_GENERIC_CRUD] - Funções Básicas de Escrita/Deleção */
 export async function handleFormSubmit(userId, collectionName, data) {
@@ -318,3 +320,4 @@ export async function deleteClientAndRelations(userId, clienteId) {
     await batch.commit();
 }
 /* [FIM: STORE_COMPLEX_DELETE] */
+
