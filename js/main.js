@@ -283,6 +283,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const filtroMes = document.getElementById('dashboard-filtro-mes');
     if (filtroAno) filtroAno.addEventListener('change', () => ui.updateDashboard(dbState));
     if (filtroMes) filtroMes.addEventListener('change', () => ui.updateDashboard(dbState));
+    // --- Filtro de Contratos (NOVO) ---
+    const filtroContrato = document.getElementById('filtro-contrato-busca');
+    if (filtroContrato) {
+        filtroContrato.addEventListener('keyup', () => {
+            ui.renderContratos(dbState);
+        });
+    }
 
     // Navegação Calendário
     document.getElementById('calendario-prev').addEventListener('click', () => { ui.mudarMes(-1, calendarioData, dbState); });
@@ -511,3 +518,4 @@ document.addEventListener('DOMContentLoaded', () => {
     /* [FIM: MAIN_LISTENERS] */
 });
 /* [FIM: MAIN_INIT] */
+
