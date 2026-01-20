@@ -227,6 +227,7 @@
             </div>
             <div id="section-contratos" class="content-section hidden">
                 <h1 class="text-2xl font-bold mb-6 text-gray-800">Contratos</h1>
+                
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                     <h2 class="text-lg font-semibold mb-4">Novo Contrato</h2>
                     <form id="form-contrato" class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -246,6 +247,26 @@
                         <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition md:col-span-3">Registrar Contrato</button>
                     </form>
                 </div>
+
+                <div class="bg-white rounded-lg shadow-md overflow-x-auto">
+                    <div class="p-4 border-b bg-gray-50 flex items-center">
+                        <i data-lucide="search" class="w-5 h-5 text-gray-400 mr-2"></i>
+                        <input type="text" id="filtro-contrato-busca" placeholder="Buscar contrato por nome do cliente..." class="w-full bg-transparent border-none focus:ring-0 text-sm text-gray-700">
+                    </div>
+                    <table class="w-full min-w-max">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="p-4 text-left">Cliente</th>
+                                <th class="p-4 text-left">Evento</th>
+                                <th class="p-4 text-left">Financeiro</th>
+                                <th class="p-4 text-left">Status</th>
+                                <th class="p-4 text-left">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-contratos"></tbody>
+                    </table>
+                </div>
+            </div>
                 <div class="bg-white rounded-lg shadow-md overflow-x-auto">
                     <table class="w-full min-w-max">
                         <thead class="bg-gray-50">
