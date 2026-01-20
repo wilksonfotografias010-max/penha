@@ -278,9 +278,20 @@ export function renderClientes(dbState) {
 /* [INICIO: UI_RENDER_CONTRATOS] */
 export function renderContratos(dbState) {
     const lista = document.getElementById('lista-contratos');
-    lista.innerHTML = dbState.contratos.length === 0 
-        ? '<tr><td colspan="5" class="p-4 text-center text-gray-500">Nenhum contrato cadastrado.</td></tr>'
-        : dbState.contratos.map(contrato => {
+    const inputBusca = document.getElementById('filtro-contrato-busca');
+    const termoBusca = inputBusca ? inputBusca.value.toLowerCase() : '';
+
+    // Filtragem dos dados
+    const contratosFiltrados = dbState.contratos.filter(contrato => {
+        const cliente = dbState.clientes.find(c => c.id === contrato.clienteId);
+        const nomeCliente = cliente ? cliente.nome.toLowerCase() : '';
+        // Retorna true se o nome do cliente incluir o termo digitado
+        return nomeCliente.includes(termoBusca);
+    });
+
+    lista.innerHTML = contratosFiltrados.length === 0 
+        ? '<tr><td colspan="5" class="p-4 text-center text-gray-500">Nenhum contrato encontrado.</td></tr>'
+        : contratosFiltrados.map(contrato => {
             const cliente = dbState.clientes.find(c => c.id === contrato.clienteId) || { nome: 'Cliente não encontrado' };
             const evento = dbState.eventos.find(e => e.id === contrato.eventoId) || { nome: 'Evento não encontrado' };
             const valorTotal = parseFloat(contrato.valorTotal || 0);
@@ -301,12 +312,12 @@ export function renderContratos(dbState) {
 
             return `
             <tr class="border-b hover:bg-gray-50">
-                <td class="p-4">${cliente.nome}</td>
-                <td class="p-4">${evento.nome}</td>
+                <td class="p-4 font-medium text-gray-800">${cliente.nome}</td>
+                <td class="p-4 text-sm text-gray-600">${evento.nome}</td>
                 <td class="p-4">
                     <div class="text-sm">Total: R$ ${valorTotal.toFixed(2).replace('.', ',')}</div>
                     <div class="text-sm text-green-600">Pago: R$ ${totalPago.toFixed(2).replace('.', ',')}</div>
-                    <div class="text-sm font-medium ${restanteClass}">Restante: R$ ${restante.toFixed(2).replace('.', ',')}</div>
+                    <div class="text-sm font-bold ${restanteClass}">Falta: R$ ${restante.toFixed(2).replace('.', ',')}</div>
                 </td>
                 <td class="p-4"><span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">${contrato.status}</span></td>
                 <td class="p-4 flex items-center gap-3">
@@ -321,7 +332,6 @@ export function renderContratos(dbState) {
         }).join('');
 }
 /* [FIM: UI_RENDER_CONTRATOS] */
-
 
 /* [INICIO: UI_RENDER_FOTOGRAFOS] */
 export function renderFotografos(dbState) {
