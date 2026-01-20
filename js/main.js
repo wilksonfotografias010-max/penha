@@ -439,6 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (colunasOrdenadas.length === 0) { alert("Crie uma coluna Kanban primeiro."); return; }
         const data = {
             clienteId: e.target.elements['evento-cliente'].value,
+            vendedorId: e.target.elements['evento-vendedor'].value, // <--- NOVO CAMPO
             nome: e.target.elements['evento-nome'].value, 
             data: e.target.elements['evento-data'].value, 
             local: e.target.elements['evento-local'].value,
@@ -543,6 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /* [FIM: MAIN_LISTENERS] */
 });
 /* [FIM: MAIN_INIT] */
+
 
 
 
