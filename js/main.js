@@ -12,7 +12,7 @@ let userId = null;
 
 // Estrutura inicial do banco de dados local
 let dbState = { 
-    eventos: [], clientes: [], contratos: [], fotografos: [], 
+    eventos: [], clientes: [], contratos: [], fotografos: [], vendedores: [],
     financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], configuracoes: [], categorias: []
 };
 
@@ -48,6 +48,7 @@ function onDataChange(newState) {
     ui.updateDashboard(dbState);
     ui.renderKanban(dbState);
     ui.renderClientes(dbState);
+    ui.renderVendedores(dbState); // <--- ADICIONE ISTO
     ui.renderContratos(dbState);
     ui.renderFotografos(dbState);
     ui.renderFinanceiro(dbState);
@@ -59,6 +60,7 @@ function onDataChange(newState) {
     
     // 4. Popula Selects Padrão
     ui.populateEventoClienteSelect(dbState);
+    ui.populateEventoVendedorSelect(dbState); // <--- ADICIONE ISTO
     ui.populateEventoSelect(dbState);
     ui.populateCustoFotografoSelect(dbState);
     ui.populateContratoClienteSelect(dbState);
@@ -533,5 +535,6 @@ document.addEventListener('DOMContentLoaded', () => {
     /* [FIM: MAIN_LISTENERS] */
 });
 /* [FIM: MAIN_INIT] */
+
 
 
