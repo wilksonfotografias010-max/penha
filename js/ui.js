@@ -798,7 +798,89 @@ export function updatePackageSelect(selectElementId, categoryId, dbState) {
     });
 }
 /* [FIM: UI_CONFIG_PACKAGES] */
+/* [INICIO: UI_CONFIG_CATEGORIAS] - Gestão de Categorias */
+export function renderCategorias(dbState) {
+    const lista = document.getElementById('lista-categorias');
+    if (!lista) return;
 
+    if (!dbState.categorias || dbState.categorias.length === 0) { 
+        lista.innerHTML = '<p class="text-gray-500 text-center py-4 text-sm">Nenhuma categoria criada.</p>'; 
+        return; 
+    }
+
+    lista.innerHTML = dbState.categorias.map(cat => `
+        <div class="flex justify-between items-center bg-gray-50 p-2 mb-2 rounded border border-gray-200">
+            <span class="font-medium text-gray-700 text-sm">${cat.nome}</span>
+            <div class="flex gap-2">
+                <button onclick="window.app.editCategoria('${cat.id}')" class="text-blue-500 hover:text-blue-700" title="Editar">
+                    <i data-lucide="edit-2" class="w-4 h-4"></i>
+                </button>
+                <button onclick="window.app.deleteItem('categorias', '${cat.id}')" class="text-red-500 hover:text-red-700" title="Excluir">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+    
+    if (window.lucide) window.lucide.createIcons();
+}
+
+export function populateCategoriaForm(categoria) {
+    document.getElementById('categoria-id').value = categoria.id;
+    document.getElementById('categoria-nome').value = categoria.nome || '';
+}
+
+export function clearCategoriaForm() {
+    const form = document.getElementById('form-categoria');
+    if(form) form.reset();
+    document.getElementById('categoria-id').value = "";
+}
+
+/**
+ * Função Mágica: Atualiza todos os selects do sistema que usam categorias.
+ */
+export function populateDynamicSelects(dbState) {
+    const idsDosSelects = [
+        'evento-tipo',          // No formulário de Evento
+        'pacote-tipo-vinculo',  // No formulário de Pacote
+        'template-link-tipo'    // No formulário de Template
+    ];
+
+    idsDosSelects.forEach(id => {
+        const select = document.getElementById(id);
+        if (!select) return;
+
+        const valorAtual = select.value; // Tenta manter a seleção atual se possível
+
+        // Mantém a primeira opção (geralmente "Selecione...") e limpa o resto
+        const primeiraOpcao = select.options[0];
+        select.innerHTML = '';
+        if (primeiraOpcao) select.appendChild(primeiraOpcao);
+
+        // Se for o template, adiciona a opção "Geral" fixa
+        if (id === 'template-link-tipo') {
+            const optGeral = document.createElement('option');
+            optGeral.value = 'geral';
+            optGeral.textContent = 'Geral (Todos)';
+            select.appendChild(optGeral);
+        }
+
+        // Adiciona as categorias dinâmicas
+        dbState.categorias.forEach(cat => {
+            const option = document.createElement('option');
+            // Usamos o ID ou o Nome como valor? 
+            // Para manter compatibilidade com o que já existe (que usava strings como 'Casamento'),
+            // vamos usar o Nome da categoria como valor.
+            option.value = cat.nome; 
+            option.textContent = cat.nome;
+            select.appendChild(option);
+        });
+
+        // Restaura valor selecionado se ainda existir
+        if (valorAtual) select.value = valorAtual;
+    });
+}
+/* [FIM: UI_CONFIG_CATEGORIAS] */
 
 /* [INICIO: UI_DELIVERY_LOGIC] */
 export function renderConfigPrazos(dbState) {
