@@ -222,6 +222,18 @@ export async function deleteEventAndRelations(userId, eventoId) {
     batch.delete(doc(db, `users/${userId}/eventos/${eventoId}`));
     await batch.commit();
 }
+// Adicione isto ao final do js/store.js, antes de fechar o arquivo ou junto aos exports
+
+export async function updateCliente(userId, clienteId, data) {
+    if (!userId || !clienteId) return;
+    const docRef = doc(db, `users/${userId}/clientes/${clienteId}`);
+    try {
+        await updateDoc(docRef, data);
+    } catch (error) {
+        console.error("Erro ao atualizar cliente: ", error);
+        throw new Error("Falha ao atualizar dados do cliente.");
+    }
+}
 export async function deleteClientAndRelations(userId, clienteId) {
     const batch = writeBatch(db);
     const eventosSnap = await getDocs(query(collection(db, `users/${userId}/eventos`), where("clienteId", "==", clienteId)));
@@ -242,3 +254,4 @@ export async function deleteClientAndRelations(userId, clienteId) {
 export async function updateColumn(userId, columnId, newName) {
     await updateDoc(doc(db, `users/${userId}/colunas/${columnId}`), { nome: newName });
 }
+
