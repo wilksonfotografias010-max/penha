@@ -37,6 +37,7 @@ function onDataChange(newState) {
     ui.populateDashboardYears(dbState);
     ui.populateDynamicSelects(dbState); // Categorias
     ui.populateRelatorioYears(dbState); // Relatórios
+    ui.populateRelatorioVendedores(dbState); // <--- ADICIONE ESTA LINHA
 
     // 3. Renderiza Interface Principal
     ui.updateDashboard(dbState);
@@ -317,9 +318,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Filtros Relatório (Balanço)
     const relAno = document.getElementById('relatorio-ano');
     const relMes = document.getElementById('relatorio-mes');
+    const relVend = document.getElementById('relatorio-vendedor');
+
     if(relAno) relAno.addEventListener('change', () => ui.renderRelatorioBalanco(dbState));
     if(relMes) relMes.addEventListener('change', () => ui.renderRelatorioBalanco(dbState));
-
+    if(relVend) relVend.addEventListener('change', () => ui.renderRelatorioBalanco(dbState)); // <--- NOVO
+    
     // Navegação Calendário
     document.getElementById('calendario-prev').addEventListener('click', () => { ui.mudarMes(-1, calendarioData, dbState); });
     document.getElementById('calendario-next').addEventListener('click', () => { ui.mudarMes(1, calendarioData, dbState); });
@@ -560,3 +564,4 @@ document.addEventListener('DOMContentLoaded', () => {
     /* [FIM: MAIN_LISTENERS] */
 });
 /* [FIM: MAIN_INIT] */
+
