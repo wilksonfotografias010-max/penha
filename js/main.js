@@ -141,12 +141,20 @@ document.addEventListener('DOMContentLoaded', () => {
         openEditClienteModal: (clienteId) => ui.openEditClienteModal(clienteId, dbState),
         closeEditClienteModal: ui.closeEditClienteModal,
         // ... dentro de window.app ...
+        clearCategoriaForm: () => ui.clearCategoriaForm(),
         gerarRelatorio: () => {
             ui.renderRelatorioBalanco(dbState);
         },
         // Funcionalidades
         abrirGerador: (contratoId) => ui.abrirGerador(contratoId, dbState),
         abrirNovoEventoDoCalendario: ui.abrirNovoEventoDoCalendario,
+
+     // --- Vendedores (NOVO) ---
+        editVendedor: (id) => {
+            const vend = dbState.vendedores.find(v => v.id === id);
+            if (vend) ui.populateVendedorForm(vend);
+        },
+        clearVendedorForm: () => ui.clearVendedorForm(),
         
         // Entregas
         viewEntregaFromAtraso: (eventId) => {
@@ -535,6 +543,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /* [FIM: MAIN_LISTENERS] */
 });
 /* [FIM: MAIN_INIT] */
+
 
 
 
