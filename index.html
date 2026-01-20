@@ -36,7 +36,7 @@
     </div>
     <div id="app-container" class="hidden flex h-screen overflow-hidden">
         
-        <aside id="sidebar" class="w-64 bg-white shadow-lg z-20 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
+        <aside id="sidebar" class="w-64 bg-white shadow-lg z-20 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col flex-shrink-0">
             <div class="p-6 border-b flex items-center justify-between">
                 <div class="flex items-center font-bold text-xl text-blue-600">
                     <i data-lucide="aperture" class="mr-2"></i> Studio
@@ -52,7 +52,7 @@
                     <i data-lucide="kanban" class="w-5 h-5 mr-3"></i> Kanban
                 </button>
                 <button onclick="window.app.showSection('section-entrega')" class="w-full flex items-center p-3 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">
-                    <i data-lucide="check-circle" class="w-5 h-5 mr-3"></i> Entregas e Prazos
+                    <i data-lucide="check-circle" class="w-5 h-5 mr-3"></i> Entregas
                 </button>
                 <button onclick="window.app.showSection('section-clientes')" class="w-full flex items-center p-3 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">
                     <i data-lucide="users" class="w-5 h-5 mr-3"></i> Clientes
@@ -81,7 +81,7 @@
                 </button>
             </div>
         </aside>
-        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-4 md:p-8">
+        <main class="flex-1 min-w-0 overflow-x-hidden overflow-y-auto bg-gray-100 p-4 md:p-8">
             <button id="mobile-menu-trigger" class="md:hidden mb-4 p-2 bg-white rounded shadow text-gray-600">
                 <i data-lucide="menu"></i> Menu
             </button>
@@ -251,23 +251,9 @@
                 <div class="bg-white rounded-lg shadow-md overflow-x-auto">
                     <div class="p-4 border-b bg-gray-50 flex items-center">
                         <i data-lucide="search" class="w-5 h-5 text-gray-400 mr-2"></i>
-                        <input type="text" id="filtro-contrato-busca" placeholder="Buscar contrato por nome do cliente..." class="w-full bg-transparent border-none focus:ring-0 text-sm text-gray-700">
+                        <input type="text" id="filtro-contrato-busca" placeholder="Buscar contrato por nome do cliente..." class="w-full bg-transparent border-none focus:ring-0 text-sm text-gray-700 outline-none">
                     </div>
-                    <table class="w-full min-w-max">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="p-4 text-left">Cliente</th>
-                                <th class="p-4 text-left">Evento</th>
-                                <th class="p-4 text-left">Financeiro</th>
-                                <th class="p-4 text-left">Status</th>
-                                <th class="p-4 text-left">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lista-contratos"></tbody>
-                    </table>
-                </div>
-            </div>
-                <div class="bg-white rounded-lg shadow-md overflow-x-auto">
+
                     <table class="w-full min-w-max">
                         <thead class="bg-gray-50">
                             <tr>
@@ -451,7 +437,7 @@
             <div id="section-configuracoes" class="content-section hidden">
                 <h1 class="text-2xl font-bold mb-6 text-gray-800">Configurações do Sistema</h1>
                 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     
                     <div>
                         <div class="flex justify-between items-center mb-4">
