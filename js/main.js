@@ -229,7 +229,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 store.confirmarCustoPendente(userId, custoId).catch(e => alert(e.message));
             }
         },
-        
+        // --- Formulário de Vendedores (NOVO) ---
+    const vendedorForm = document.getElementById('form-vendedor');
+    if (vendedorForm) {
+        vendedorForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('vendedor-id').value;
+            const nome = document.getElementById('vendedor-nome').value;
+            if(!nome) return;
+            store.saveVendedor(userId, { nome }, id || null).then(() => ui.clearVendedorForm()).catch(err => alert(err.message));
+        });
+    }
         // Exclusão
         deleteItem: (collectionName, id) => {
             if (!userId) return;
@@ -544,6 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /* [FIM: MAIN_LISTENERS] */
 });
 /* [FIM: MAIN_INIT] */
+
 
 
 
