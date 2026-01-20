@@ -25,6 +25,14 @@ let selectedEventIdForEntrega = null;
 /* [INICIO: MAIN_CORE_LOGIC] - Reação a Mudanças no Banco de Dados */
 function onDataChange(newState) {
     dbState = newState; 
+    // Atualiza filtros do relatório
+    ui.populateRelatorioYears(dbState);
+    
+    // Se a aba estiver aberta, recalcula
+    const relatorioSection = document.getElementById('section-relatorios');
+    if (relatorioSection && !relatorioSection.classList.contains('hidden')) {
+        ui.renderRelatorioBalanco(dbState);
+    }
     
     // 1. Automação de Custos Fixos (Verifica virada de mês)
     if (userId && dbState.custos.length > 0) {
@@ -130,7 +138,10 @@ document.addEventListener('DOMContentLoaded', () => {
         openEditContratoModal: (contratoId) => ui.openEditContratoModal(contratoId, dbState),
         openEditClienteModal: (clienteId) => ui.openEditClienteModal(clienteId, dbState),
         closeEditClienteModal: ui.closeEditClienteModal,
-        
+        // ... dentro de window.app ...
+        gerarRelatorio: () => {
+            ui.renderRelatorioBalanco(dbState);
+        },
         // Funcionalidades
         abrirGerador: (contratoId) => ui.abrirGerador(contratoId, dbState),
         abrirNovoEventoDoCalendario: ui.abrirNovoEventoDoCalendario,
@@ -277,7 +288,11 @@ document.addEventListener('DOMContentLoaded', () => {
     /* [INICIO: MAIN_LISTENERS] - Listeners de Eventos do DOM */
     
     initGeradorListeners(); 
-
+    // ... dentro dos listeners ...
+    const relAno = document.getElementById('relatorio-ano');
+    const relMes = document.getElementById('relatorio-mes');
+    if(relAno) relAno.addEventListener('change', () => ui.renderRelatorioBalanco(dbState));
+    if(relMes) relMes.addEventListener('change', () => ui.renderRelatorioBalanco(dbState));
     // Filtros Dashboard
     const filtroAno = document.getElementById('dashboard-filtro-ano');
     const filtroMes = document.getElementById('dashboard-filtro-mes');
@@ -518,4 +533,5 @@ document.addEventListener('DOMContentLoaded', () => {
     /* [FIM: MAIN_LISTENERS] */
 });
 /* [FIM: MAIN_INIT] */
+
 
