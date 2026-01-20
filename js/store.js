@@ -25,7 +25,7 @@ export function setupRealtimeListeners(userId, onDataChangeCallback) {
         financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], configuracoes: [] 
     };
     
-    const collections = ['eventos', 'clientes', 'contratos', 'fotografos', 'financeiro', 'custos', 'colunas', 'templates', 'pacotes', 'configuracoes'];
+    const collections = ['eventos', 'clientes', 'contratos', 'fotografos', 'financeiro', 'custos', 'colunas', 'templates', 'pacotes', 'configuracoes', 'categorias'];
     let unsubscribeListeners = [];
 
     collections.forEach(col => {
@@ -55,6 +55,56 @@ export function setupRealtimeListeners(userId, onDataChangeCallback) {
         });
         unsubscribeListeners.push(unsub);
     });
+    /* [INICIO: STORE_LISTENER] - Configuração dos Listeners */
+export function setupRealtimeListeners(userId, onDataChangeCallback) {
+    if (!userId) return [];
+
+    // ADICIONADO: 'categorias' no estado inicial
+    const dbState = { 
+        eventos: [], clientes: [], contratos: [], fotografos: [], 
+        financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], configuracoes: [],
+        categorias: [] // Nova coleção
+    };
+    
+    // ADICIONADO: 'categorias' na lista de monitoramento
+    const collections = ['eventos', 'clientes', 'contratos', 'fotografos', 'financeiro', 'custos', 'colunas', 'templates', 'pacotes', 'configuracoes', 'categorias'];
+    let unsubscribeListeners = [];
+
+    collections.forEach(col => {
+        const collectionPath = `users/${userId}/${col}`;
+        const unsub = onSnapshot(collection(db, collectionPath), (querySnapshot) => {
+            dbState[col] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            // Ordenações existentes...
+            if (col === 'custos') dbState.custos.sort((a, b) => new Date(b.data) - new Date(a.data));
+            if (col === 'clientes') dbState.clientes.sort((a, b) => a.nome.localeCompare(b.nome));
+            if (col === 'eventos') dbState.eventos.sort((a, b) => new Date(a.data) - new Date(b.data)); 
+            if (col === 'financeiro') dbState.financeiro.sort((a, b) => new Date(b.data) - new Date(a.data));
+            if (col === 'colunas') dbState.colunas.sort((a, b) => a.ordem - b.ordem);
+            
+            // ADICIONADO: Ordenação de categorias alfabética
+            if (col === 'categorias') dbState.categorias.sort((a, b) => a.nome.localeCompare(b.nome));
+
+            onDataChangeCallback(dbState);
+        });
+        unsubscribeListeners.push(unsub);
+    });
+
+    return unsubscribeListeners;
+}
+/* [FIM: STORE_LISTENER] */
+
+// ... (Mantenha as outras funções do arquivo store.js) ...
+
+/* [INICIO: STORE_CATEGORIAS] - Funções para Categorias */
+export async function saveCategoria(userId, categoriaData, categoriaId) {
+    if (categoriaId) { 
+        await updateDoc(doc(db, `users/${userId}/categorias/${categoriaId}`), categoriaData); 
+    } else { 
+        await addDoc(collection(db, `users/${userId}/categorias`), categoriaData); 
+    }
+}
+/* [FIM: STORE_CATEGORIAS] */
 
     return unsubscribeListeners;
 }
@@ -254,4 +304,5 @@ export async function deleteClientAndRelations(userId, clienteId) {
 export async function updateColumn(userId, columnId, newName) {
     await updateDoc(doc(db, `users/${userId}/colunas/${columnId}`), { nome: newName });
 }
+
 
