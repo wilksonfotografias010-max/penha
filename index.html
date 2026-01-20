@@ -34,7 +34,6 @@
             </form>
         </div>
     </div>
-
     <div id="app-container" class="hidden flex h-screen overflow-hidden">
         
         <aside id="sidebar" class="w-64 bg-white shadow-lg z-20 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
@@ -82,7 +81,6 @@
                 </button>
             </div>
         </aside>
-
         <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-4 md:p-8">
             <button id="mobile-menu-trigger" class="md:hidden mb-4 p-2 bg-white rounded shadow text-gray-600">
                 <i data-lucide="menu"></i> Menu
@@ -145,20 +143,15 @@
 
                     <div class="bg-white p-6 rounded-lg shadow-sm col-span-1 lg:col-span-2">
                          <h3 class="font-bold text-gray-700 mb-4">Próximos Eventos (5)</h3>
-                         <div id="dashboard-proximos-eventos" class="space-y-3">
-                             <p class="text-gray-400">Carregando...</p>
-                         </div>
+                         <div id="dashboard-proximos-eventos" class="space-y-3"><p class="text-gray-400">Carregando...</p></div>
                     </div>
 
                     <div class="bg-white p-6 rounded-lg shadow-sm col-span-1 md:col-span-2 lg:col-span-3">
                         <h3 class="font-bold text-gray-700 mb-4">Status Pós-Evento (Últimos 5)</h3>
-                        <div id="dashboard-ultimos-eventos" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <p class="text-gray-400">Carregando...</p>
-                        </div>
+                        <div id="dashboard-ultimos-eventos" class="grid grid-cols-1 md:grid-cols-2 gap-4"><p class="text-gray-400">Carregando...</p></div>
                    </div>
                 </div>
             </div>
-
             <div id="section-kanban" class="content-section hidden h-full flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <h1 class="text-2xl font-bold text-gray-800">Quadro de Eventos</h1>
@@ -168,33 +161,23 @@
                     </form>
                 </div>
                 <div id="kanban-board-container" class="flex-1 overflow-x-auto overflow-y-hidden">
-                    <div id="kanban-board" class="flex gap-4 h-full pb-4 min-w-max">
-                        </div>
+                    <div id="kanban-board" class="flex gap-4 h-full pb-4 min-w-max"></div>
                 </div>
             </div>
-
             <div id="section-entrega" class="content-section hidden">
                 <h1 class="text-2xl font-bold mb-6 text-gray-800">Controle de Prazos</h1>
-                
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <div class="bg-white p-4 rounded shadow">
                         <label class="block text-sm font-bold text-gray-700 mb-2">Filtrar por Evento</label>
-                        <select id="entrega-evento-select" class="w-full p-2 border rounded">
-                            <option value="">Carregando...</option>
-                        </select>
+                        <select id="entrega-evento-select" class="w-full p-2 border rounded"><option value="">Carregando...</option></select>
                     </div>
                 </div>
-
                 <div id="entrega-default-view" class="space-y-4">
                     <h2 class="text-lg font-semibold text-gray-700">Entregas Pendentes e Atrasadas</h2>
-                    <div id="entrega-atrasos-container" class="grid gap-4">
-                        </div>
+                    <div id="entrega-atrasos-container" class="grid gap-4"></div>
                 </div>
-
-                <div id="entrega-management-area" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
-                    </div>
+                <div id="entrega-management-area" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6"></div>
             </div>
-
             <div id="section-clientes" class="content-section hidden">
                 <h1 class="text-2xl font-bold mb-6 text-gray-800">Clientes</h1>
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -223,7 +206,6 @@
                     </table>
                 </div>
             </div>
-
             <div id="section-eventos" class="content-section hidden">
                 <h1 class="text-2xl font-bold mb-6 text-gray-800">Eventos</h1>
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -233,19 +215,16 @@
                         <input type="text" name="evento-nome" id="evento-nome" placeholder="Nome do Evento (ex: Casamento Maria e João)" class="p-2 border rounded" required>
                         <input type="date" name="evento-data" id="evento-data" class="p-2 border rounded" required>
                         <input type="text" name="evento-local" placeholder="Local do Evento" class="p-2 border rounded">
-                        <select name="evento-tipo" class="p-2 border rounded">
-                            <option value="Casamento">Casamento</option>
-                            <option value="Infantil">Infantil</option>
-                            <option value="Corporativo">Corporativo</option>
-                            <option value="Ensaio">Ensaio</option>
-                            <option value="Evento Adulto">Evento Adulto</option>
+                        
+                        <select name="evento-tipo" id="evento-tipo" class="p-2 border rounded">
+                            <option value="">Carregando categorias...</option>
                         </select>
+                        
                         <textarea name="evento-descricao" placeholder="Observações..." class="p-2 border rounded md:col-span-2"></textarea>
                         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition md:col-span-2">Agendar Evento</button>
                     </form>
                 </div>
             </div>
-
             <div id="section-contratos" class="content-section hidden">
                 <h1 class="text-2xl font-bold mb-6 text-gray-800">Contratos</h1>
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -282,7 +261,6 @@
                     </table>
                 </div>
             </div>
-
             <div id="section-gerador" class="content-section hidden">
                 <div class="flex items-center mb-6">
                     <button onclick="window.app.showSection('section-contratos')" class="mr-4 p-2 bg-gray-200 rounded-full hover:bg-gray-300">
@@ -308,22 +286,10 @@
                         <div class="md:col-span-2 bg-blue-50 p-4 rounded-lg">
                             <h3 class="font-bold text-blue-800 mb-3 flex items-center"><i data-lucide="calendar" class="w-4 h-4 mr-2"></i> Dados do Evento</h3>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                    <label class="block text-gray-700 text-xs font-bold mb-1" for="eventDate">Data do Evento</label>
-                                    <input class="w-full p-2 border rounded" id="eventDate" type="date">
-                                </div>
-                                <div>
-                                    <label class="block text-gray-700 text-xs font-bold mb-1" for="eventTime">Horário</label>
-                                    <input class="w-full p-2 border rounded" id="eventTime" type="time">
-                                </div>
-                                <div>
-                                    <label class="block text-gray-700 text-xs font-bold mb-1" for="eventDuration">Duração (h)</label>
-                                    <input class="w-full p-2 border rounded" id="eventDuration" type="text" placeholder="Ex: 4 horas">
-                                </div>
-                                <div class="md:col-span-3">
-                                    <label class="block text-gray-700 text-xs font-bold mb-1" for="eventLocal">Local do Evento</label>
-                                    <input class="w-full p-2 border rounded" id="eventLocal" type="text" placeholder="Endereço completo">
-                                </div>
+                                <div><label class="block text-gray-700 text-xs font-bold mb-1" for="eventDate">Data do Evento</label><input class="w-full p-2 border rounded" id="eventDate" type="date"></div>
+                                <div><label class="block text-gray-700 text-xs font-bold mb-1" for="eventTime">Horário</label><input class="w-full p-2 border rounded" id="eventTime" type="time"></div>
+                                <div><label class="block text-gray-700 text-xs font-bold mb-1" for="eventDuration">Duração (h)</label><input class="w-full p-2 border rounded" id="eventDuration" type="text" placeholder="Ex: 4 horas"></div>
+                                <div class="md:col-span-3"><label class="block text-gray-700 text-xs font-bold mb-1" for="eventLocal">Local do Evento</label><input class="w-full p-2 border rounded" id="eventLocal" type="text" placeholder="Endereço completo"></div>
                             </div>
                         </div>
 
@@ -352,16 +318,9 @@
                              <select id="contractPackage" class="w-full p-2 border rounded bg-white mb-4">
                                  <option value="">Selecione um pacote...</option>
                              </select>
-                             
                              <div class="grid grid-cols-2 gap-4">
-                                 <div>
-                                    <label class="block text-gray-700 text-xs font-bold mb-1">Valor Total (R$)</label>
-                                    <input class="w-full p-2 border rounded font-bold text-green-700" id="value" type="number" step="0.01">
-                                 </div>
-                                 <div>
-                                    <label class="block text-gray-700 text-xs font-bold mb-1">Forma de Pagamento</label>
-                                    <input class="w-full p-2 border rounded" id="paymentMethod" type="text" placeholder="Ex: 30% entrada + restante no dia">
-                                 </div>
+                                 <div><label class="block text-gray-700 text-xs font-bold mb-1">Valor Total (R$)</label><input class="w-full p-2 border rounded font-bold text-green-700" id="value" type="number" step="0.01"></div>
+                                 <div><label class="block text-gray-700 text-xs font-bold mb-1">Forma de Pagamento</label><input class="w-full p-2 border rounded" id="paymentMethod" type="text" placeholder="Ex: 30% entrada..."></div>
                              </div>
                         </div>
 
@@ -370,7 +329,6 @@
                                 <input type="checkbox" id="imageRights" class="w-4 h-4 text-blue-600 rounded" checked>
                                 <label for="imageRights" class="ml-2 text-sm text-gray-700">Incluir cláusula de uso de imagem</label>
                              </div>
-                             
                              <button type="button" id="generateBtn" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition transform hover:scale-105 flex justify-center items-center">
                                 <i data-lucide="file-check" class="w-5 h-5 mr-2"></i> Gerar Contrato (PDF & Word)
                              </button>
@@ -378,8 +336,6 @@
                     </form>
                 </div>
             </div>
-
-
             <div id="section-financeiro" class="content-section hidden">
                 <h1 class="text-2xl font-bold mb-6 text-gray-800">Financeiro</h1>
                 
@@ -391,26 +347,21 @@
                                 <thead class="text-left text-gray-500 bg-gray-50 sticky top-0">
                                     <tr><th>Cliente</th><th>Evento</th><th>Falta</th><th>Ação</th></tr>
                                 </thead>
-                                <tbody id="lista-contas-a-receber">
-                                    </tbody>
+                                <tbody id="lista-contas-a-receber"></tbody>
                             </table>
                         </div>
                     </div>
 
                     <div class="bg-white p-6 rounded-lg shadow-md">
                          <h2 class="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Fluxo de Caixa (Últimos 12 Meses)</h2>
-                         <div class="relative h-64">
-                             <canvas id="fluxo-caixa-chart"></canvas>
-                         </div>
+                         <div class="relative h-64"><canvas id="fluxo-caixa-chart"></canvas></div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-white p-6 rounded-lg shadow-md">
                         <h2 class="text-lg font-semibold mb-4">Registrar Pagamento (Entrada)</h2>
-                        <button onclick="window.app.openAddPaymentModal()" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
-                            + Novo Pagamento
-                        </button>
+                        <button onclick="window.app.openAddPaymentModal()" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">+ Novo Pagamento</button>
                     </div>
                     
                     <div class="bg-white p-6 rounded-lg shadow-md">
@@ -438,14 +389,7 @@
                     <h2 class="text-lg font-semibold p-4 border-b">Histórico de Entradas</h2>
                     <table class="w-full min-w-max">
                         <thead class="bg-gray-50">
-                            <tr>
-                                <th class="p-4 text-left">Data</th>
-                                <th class="p-4 text-left">Cliente</th>
-                                <th class="p-4 text-left">Evento</th>
-                                <th class="p-4 text-left">Método</th>
-                                <th class="p-4 text-left">Valor</th>
-                                <th class="p-4 text-left">Ações</th>
-                            </tr>
+                            <tr><th class="p-4 text-left">Data</th><th class="p-4 text-left">Cliente</th><th class="p-4 text-left">Evento</th><th class="p-4 text-left">Método</th><th class="p-4 text-left">Valor</th><th class="p-4 text-left">Ações</th></tr>
                         </thead>
                         <tbody id="lista-financeiro"></tbody>
                     </table>
@@ -460,14 +404,14 @@
                                 <th class="p-4 text-left">Descrição</th>
                                 <th class="p-4 text-left">Evento</th>
                                 <th class="p-4 text-left">Valor</th>
-                                <th class="p-4 text-left">Status/Recorrência</th> <th class="p-4 text-left">Ações</th>
+                                <th class="p-4 text-left">Status/Recorrência</th>
+                                <th class="p-4 text-left">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="lista-custos"></tbody>
                     </table>
                 </div>
             </div>
-
             <div id="section-calendario" class="content-section hidden">
                 <h1 class="text-2xl font-bold mb-6 text-gray-800">Calendário</h1>
                 <div class="bg-white p-6 rounded-lg shadow-md">
@@ -480,34 +424,43 @@
                     <div class="grid grid-cols-7 gap-1 text-center font-bold text-gray-500 mb-2">
                         <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
                     </div>
-                    <div id="calendario-grid" class="grid grid-cols-7 gap-1 bg-gray-200 border border-gray-200">
-                        </div>
+                    <div id="calendario-grid" class="grid grid-cols-7 gap-1 bg-gray-200 border border-gray-200"></div>
                 </div>
             </div>
-
-             <div id="section-configuracoes" class="content-section hidden">
-                <h1 class="text-2xl font-bold mb-6 text-gray-800">Configurações</h1>
+            <div id="section-configuracoes" class="content-section hidden">
+                <h1 class="text-2xl font-bold mb-6 text-gray-800">Configurações do Sistema</h1>
                 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     
                     <div>
                         <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-xl font-semibold text-gray-700">Pacotes de Serviços</h2>
-                            <button onclick="window.app.clearPacoteForm()" class="text-sm text-blue-600 hover:underline">Novo Pacote</button>
+                            <h2 class="text-xl font-semibold text-gray-700">Categorias</h2>
+                            <button onclick="window.app.clearCategoriaForm()" class="text-sm text-blue-600 hover:underline">+ Nova</button>
                         </div>
-                        
-                        <div class="bg-white p-4 rounded-lg shadow-md mb-6">
+                        <div class="bg-white p-4 rounded-lg shadow-md mb-6 border-l-4 border-orange-500">
+                            <form id="form-categoria" class="space-y-3">
+                                <input type="hidden" id="categoria-id">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1">Nome da Categoria</label>
+                                    <input type="text" id="categoria-nome" class="w-full p-2 border rounded text-sm" placeholder="Ex: Casamento, 15 Anos" required>
+                                </div>
+                                <button type="submit" class="w-full bg-orange-600 text-white py-2 rounded text-sm hover:bg-orange-700">Salvar Categoria</button>
+                            </form>
+                        </div>
+                        <div id="lista-categorias" class="space-y-2 max-h-96 overflow-y-auto"></div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-semibold text-gray-700">Pacotes</h2>
+                            <button onclick="window.app.clearPacoteForm()" class="text-sm text-blue-600 hover:underline">+ Novo</button>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-md mb-6 border-l-4 border-blue-500">
                             <form id="form-pacote" class="space-y-3">
                                 <input type="hidden" id="pacote-id">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-600 mb-1">Categoria</label>
-                                    <select id="pacote-tipo-vinculo" class="w-full p-2 border rounded text-sm" required>
-                                        <option value="">Selecione...</option>
-                                        <option value="1">Fotografia Infantil</option>
-                                        <option value="2">Fotografia de Casamento</option>
-                                        <option value="3">Casamento Civil</option>
-                                        <option value="6">Formatura</option>
-                                    </select>
+                                    <select id="pacote-tipo-vinculo" class="w-full p-2 border rounded text-sm" required><option value="">Carregando...</option></select>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-gray-600 mb-1">Nome do Pacote</label>
@@ -520,68 +473,47 @@
                                 <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700">Salvar Pacote</button>
                             </form>
                         </div>
-
-                        <div id="lista-pacotes" class="space-y-2">
-                            </div>
+                        <div id="lista-pacotes" class="space-y-2 max-h-96 overflow-y-auto"></div>
                     </div>
 
                     <div>
                         <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-xl font-semibold text-gray-700">Templates de Contrato</h2>
-                            <button onclick="window.app.clearTemplateForm()" class="text-sm text-blue-600 hover:underline">Novo Template</button>
+                            <h2 class="text-xl font-semibold text-gray-700">Templates</h2>
+                            <button onclick="window.app.clearTemplateForm()" class="text-sm text-blue-600 hover:underline">+ Novo</button>
                         </div>
-
-                        <div class="bg-white p-4 rounded-lg shadow-md mb-6">
+                        <div class="bg-white p-4 rounded-lg shadow-md mb-6 border-l-4 border-purple-500">
                             <form id="form-template" class="space-y-3">
                                 <input type="hidden" id="template-id">
                                 <input type="text" id="template-titulo" placeholder="Título do Template" class="w-full p-2 border rounded text-sm" required>
-                                
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <label class="block text-xs font-bold text-gray-600 mb-1">Vincular a Tipo</label>
-                                        <select id="template-link-tipo" class="w-full p-2 border rounded text-sm">
-                                            <option value="geral">Geral (Todos)</option>
-                                            <option value="1">Infantil</option>
-                                            <option value="2">Casamento</option>
-                                            <option value="3">Civil</option>
-                                            <option value="6">Formatura</option>
-                                        </select>
+                                        <select id="template-link-tipo" class="w-full p-2 border rounded text-sm"><option value="geral">Geral</option></select>
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-gray-600 mb-1">Vincular a Pacote (Opcional)</label>
-                                        <select id="template-link-pacote" class="w-full p-2 border rounded text-sm">
-                                            <option value="">Qualquer Pacote</option>
-                                        </select>
+                                        <label class="block text-xs font-bold text-gray-600 mb-1">Vincular a Pacote</label>
+                                        <select id="template-link-pacote" class="w-full p-2 border rounded text-sm"><option value="">Qualquer Pacote</option></select>
                                     </div>
                                 </div>
-
                                 <div class="border rounded p-2 bg-gray-50 text-xs text-gray-500 mb-2">
-                                    <p class="font-bold mb-1">Variáveis disponíveis:</p>
+                                    <p class="font-bold mb-1">Variáveis:</p>
                                     <div class="flex flex-wrap gap-2">
                                         <span class="bg-gray-200 px-1 rounded cursor-pointer" onclick="document.execCommand('insertText', false, '{CLIENTE_NOME}')">{CLIENTE_NOME}</span>
-                                        <span class="bg-gray-200 px-1 rounded cursor-pointer" onclick="document.execCommand('insertText', false, '{EVENTO_DATA}')">{EVENTO_DATA}</span>
                                         <span class="bg-gray-200 px-1 rounded cursor-pointer" onclick="document.execCommand('insertText', false, '{VALOR_TOTAL}')">{VALOR_TOTAL}</span>
-                                        <span class="bg-gray-200 px-1 rounded cursor-pointer" onclick="document.execCommand('insertText', false, '{FORMA_PAGAMENTO}')">{FORMA_PAGAMENTO}</span>
                                     </div>
                                 </div>
-
                                 <div class="editor-container">
                                     <div class="editor-toolbar">
                                         <button type="button" onclick="document.execCommand('bold',false,null)" class="editor-btn">B</button>
                                         <button type="button" onclick="document.execCommand('italic',false,null)" class="editor-btn">I</button>
                                         <button type="button" onclick="document.execCommand('underline',false,null)" class="editor-btn">U</button>
-                                        <button type="button" onclick="document.execCommand('justifyLeft',false,null)" class="editor-btn">Esq</button>
-                                        <button type="button" onclick="document.execCommand('justifyCenter',false,null)" class="editor-btn">Cen</button>
-                                        <button type="button" onclick="document.execCommand('insertUnorderedList',false,null)" class="editor-btn">Lista</button>
                                     </div>
                                     <div id="template-corpo" class="rich-editor bg-white border border-t-0 p-4 h-64 overflow-y-auto" contenteditable="true"></div>
                                 </div>
-
                                 <button type="submit" class="w-full bg-purple-600 text-white py-2 rounded text-sm hover:bg-purple-700">Salvar Template</button>
                             </form>
                         </div>
-                        
-                        <div id="lista-templates" class="space-y-2"></div>
+                        <div id="lista-templates" class="space-y-2 max-h-96 overflow-y-auto"></div>
                     </div>
                 </div>
                 
@@ -599,7 +531,6 @@
                         </div>
                         <div class="bg-white p-4 rounded shadow">
                             <h3 class="font-bold mb-2">Exportação de Dados</h3>
-                            <p class="text-sm text-gray-500 mb-3">Baixe um relatório completo de todos os eventos e finanças.</p>
                             <button onclick="window.app.exportarCSV()" class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700 w-full flex justify-center items-center">
                                 <i data-lucide="download" class="w-4 h-4 mr-2"></i> Baixar Relatório CSV (Excel)
                             </button>
@@ -607,80 +538,42 @@
                     </div>
                 </div>
             </div>
+            </main>
+        </div>
 
-        </main>
-    </div>
 
     <div id="modal-add-payment" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
         <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
             <h2 class="text-xl font-bold mb-4">Adicionar Pagamento</h2>
             <form id="add-payment-form">
                 <input type="hidden" id="payment-contrato-id">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Valor (R$)</label>
-                    <input type="number" id="payment-amount" step="0.01" class="w-full p-2 border rounded" required>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700">Valor (R$)</label><input type="number" id="payment-amount" step="0.01" class="w-full p-2 border rounded" required></div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700">Data</label><input type="date" id="payment-date" class="w-full p-2 border rounded" required></div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700">Método</label>
+                    <select id="payment-method" class="w-full p-2 border rounded"><option value="Pix">Pix</option><option value="Dinheiro">Dinheiro</option><option value="Cartão">Cartão</option></select>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Data</label>
-                    <input type="date" id="payment-date" class="w-full p-2 border rounded" required>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Método</label>
-                    <select id="payment-method" class="w-full p-2 border rounded">
-                        <option value="Pix">Pix</option>
-                        <option value="Dinheiro">Dinheiro</option>
-                        <option value="Cartão">Cartão</option>
-                        <option value="Transferência">Transferência</option>
-                    </select>
-                </div>
-                <div class="flex justify-end gap-2">
-                    <button type="button" id="cancel-payment-button" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Salvar</button>
-                </div>
+                <div class="flex justify-end gap-2"><button type="button" id="cancel-payment-button" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancelar</button><button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Salvar</button></div>
             </form>
         </div>
     </div>
 
     <div id="modal-dossie" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="bg-gray-800 text-white p-4 flex justify-between items-center">
-                <h2 class="text-xl font-bold flex items-center"><i data-lucide="folder-open" class="mr-2"></i> Dossiê do Contrato</h2>
-                <button onclick="window.app.closeDossieModal()" class="text-gray-300 hover:text-white"><i data-lucide="x"></i></button>
-            </div>
+            <div class="bg-gray-800 text-white p-4 flex justify-between items-center"><h2 class="text-xl font-bold flex items-center"><i data-lucide="folder-open" class="mr-2"></i> Dossiê do Contrato</h2><button onclick="window.app.closeDossieModal()" class="text-gray-300 hover:text-white"><i data-lucide="x"></i></button></div>
             <div class="p-6 overflow-y-auto">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-gray-50 p-4 rounded border">
-                        <p class="text-xs text-gray-500 uppercase font-bold">Cliente</p>
-                        <p class="text-lg font-medium text-gray-800" id="dossie-cliente-nome">---</p>
-                    </div>
-                    <div class="bg-gray-50 p-4 rounded border">
-                        <p class="text-xs text-gray-500 uppercase font-bold">Evento</p>
-                        <p class="text-lg font-medium text-gray-800"><span id="dossie-evento-nome">---</span> <span class="text-sm text-gray-500 block" id="dossie-evento-data">---</span></p>
-                    </div>
+                    <div class="bg-gray-50 p-4 rounded border"><p class="text-xs text-gray-500 uppercase font-bold">Cliente</p><p class="text-lg font-medium text-gray-800" id="dossie-cliente-nome">---</p></div>
+                    <div class="bg-gray-50 p-4 rounded border"><p class="text-xs text-gray-500 uppercase font-bold">Evento</p><p class="text-lg font-medium text-gray-800"><span id="dossie-evento-nome">---</span> <span class="text-sm text-gray-500 block" id="dossie-evento-data">---</span></p></div>
                 </div>
-
                 <h3 class="font-bold text-gray-800 border-b pb-2 mb-4">Resumo Financeiro</h3>
                 <div class="grid grid-cols-3 gap-4 mb-6 text-center">
-                    <div>
-                        <p class="text-xs text-gray-500">Total Contratado</p>
-                        <p class="text-xl font-bold text-blue-600" id="dossie-contrato-valor">R$ 0,00</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500">Total Pago</p>
-                        <p class="text-xl font-bold text-green-600" id="dossie-total-pago">R$ 0,00</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500">Restante</p>
-                        <p class="text-xl font-bold text-red-600" id="dossie-restante">R$ 0,00</p>
-                    </div>
+                    <div><p class="text-xs text-gray-500">Total Contratado</p><p class="text-xl font-bold text-blue-600" id="dossie-contrato-valor">R$ 0,00</p></div>
+                    <div><p class="text-xs text-gray-500">Total Pago</p><p class="text-xl font-bold text-green-600" id="dossie-total-pago">R$ 0,00</p></div>
+                    <div><p class="text-xs text-gray-500">Restante</p><p class="text-xl font-bold text-red-600" id="dossie-restante">R$ 0,00</p></div>
                 </div>
-
                 <h3 class="font-bold text-gray-800 border-b pb-2 mb-4">Histórico de Pagamentos</h3>
                 <div id="dossie-lista-pagamentos" class="space-y-2 text-sm text-gray-600 mb-6"></div>
-
-                <div class="flex items-center justify-between bg-yellow-50 p-3 rounded border border-yellow-200">
-                    <span class="text-yellow-800 font-medium">Status Atual: <span id="dossie-contrato-status">---</span></span>
-                </div>
+                <div class="flex items-center justify-between bg-yellow-50 p-3 rounded border border-yellow-200"><span class="text-yellow-800 font-medium">Status Atual: <span id="dossie-contrato-status">---</span></span></div>
             </div>
         </div>
     </div>
@@ -698,35 +591,16 @@
 
                 <div class="mb-4">
                     <label class="block text-sm font-bold text-gray-700 mb-1">Histórico / Motivo das Alterações</label>
-                    <textarea id="edit-contrato-historico" rows="4" class="w-full p-2 border rounded text-sm bg-gray-50" placeholder="Ex: Valor original R$ 2.000. Adicionado R$ 200 referente a álbum extra em 20/01..."></textarea>
-                    <p class="text-xs text-gray-500 mt-1">Registre aqui o motivo de qualquer mudança de valor.</p>
+                    <textarea id="edit-contrato-historico" rows="4" class="w-full p-2 border rounded text-sm bg-gray-50" placeholder="Ex: Valor original R$ 2.000. Adicionado R$ 200 referente a álbum extra..."></textarea>
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Status</label>
-                    <select id="edit-contrato-status" class="w-full p-2 border rounded">
-                        <option value="Proposta">Proposta</option>
-                        <option value="Enviado">Enviado</option>
-                        <option value="Assinado">Assinado</option>
-                        <option value="Concluído">Concluído</option>
-                        <option value="Cancelado">Cancelado</option>
-                    </select>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700">Status</label>
+                    <select id="edit-contrato-status" class="w-full p-2 border rounded"><option value="Proposta">Proposta</option><option value="Enviado">Enviado</option><option value="Assinado">Assinado</option><option value="Concluído">Concluído</option><option value="Cancelado">Cancelado</option></select>
                 </div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700">Link do Contrato (Drive)</label><input type="text" id="edit-contrato-link" class="w-full p-2 border rounded"></div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700">Forma Pagamento</label><input type="text" id="edit-contrato-forma-pagamento" class="w-full p-2 border rounded"></div>
                 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Link do Contrato (Drive)</label>
-                    <input type="text" id="edit-contrato-link" class="w-full p-2 border rounded">
-                </div>
-                
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Forma Pagamento (Texto)</label>
-                    <input type="text" id="edit-contrato-forma-pagamento" class="w-full p-2 border rounded">
-                </div>
-
-                <div class="flex justify-end gap-2">
-                    <button type="button" id="cancel-edit-contract-button" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Salvar Alterações</button>
-                </div>
+                <div class="flex justify-end gap-2"><button type="button" id="cancel-edit-contract-button" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Salvar Alterações</button></div>
             </form>
         </div>
     </div>
@@ -736,40 +610,15 @@
             <h2 class="text-xl font-bold mb-4">Editar Cliente</h2>
             <form id="form-edit-cliente">
                 <input type="hidden" id="edit-cliente-id">
-                
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Nome Completo</label>
-                    <input type="text" id="edit-cliente-nome" class="w-full p-2 border rounded" required>
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Telefone / WhatsApp</label>
-                    <input type="text" id="edit-cliente-telefone" class="w-full p-2 border rounded">
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="edit-cliente-email" class="w-full p-2 border rounded">
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">CPF / RG</label>
-                    <input type="text" id="edit-cliente-documento" class="w-full p-2 border rounded">
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Endereço</label>
-                    <input type="text" id="edit-cliente-endereco" class="w-full p-2 border rounded">
-                </div>
-
-                <div class="flex justify-end gap-2">
-                    <button type="button" onclick="window.app.closeEditClienteModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Salvar Alterações</button>
-                </div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700">Nome</label><input type="text" id="edit-cliente-nome" class="w-full p-2 border rounded" required></div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700">Telefone</label><input type="text" id="edit-cliente-telefone" class="w-full p-2 border rounded"></div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700">Email</label><input type="email" id="edit-cliente-email" class="w-full p-2 border rounded"></div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700">CPF/RG</label><input type="text" id="edit-cliente-documento" class="w-full p-2 border rounded"></div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700">Endereço</label><input type="text" id="edit-cliente-endereco" class="w-full p-2 border rounded"></div>
+                <div class="flex justify-end gap-2"><button type="button" onclick="window.app.closeEditClienteModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Salvar</button></div>
             </form>
         </div>
     </div>
-
     <script type="module" src="js/main.js"></script>
 </body>
 </html>
