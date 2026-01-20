@@ -1,18 +1,16 @@
-// js/main.js
-
-// ######################################################
-// ARQUIVO 7: O CÉREBRO MESTRE (main.js) - VERSÃO FINAL CUSTOS
-// ######################################################
-
+/* [INICIO: MAIN_IMPORTS] - Importações de Módulos */
 import { setupAuthListeners } from './auth.js';
 import * as store from './store.js'; 
 import * as ui from './ui.js';       
 import { initGeradorListeners } from './geradorContrato.js';
 import { initDragAndDrop } from './kanban.js'; 
+/* [FIM: MAIN_IMPORTS] */
 
+
+/* [INICIO: MAIN_STATE] - Estado Global da Aplicação */
 let userId = null;
 
-// Estado global da aplicação
+// Estrutura inicial do banco de dados local
 let dbState = { 
     eventos: [], clientes: [], contratos: [], fotografos: [], 
     financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], configuracoes: []
@@ -21,23 +19,30 @@ let dbState = {
 let unsubscribeListeners = []; 
 let calendarioData = new Date(); 
 let selectedEventIdForEntrega = null; 
+/* [FIM: MAIN_STATE] */
 
+
+/* [INICIO: MAIN_CORE_LOGIC] - Reação a Mudanças no Banco de Dados */
 /**
- * Função chamada sempre que algo muda no Banco de Dados (Firebase)
+ * Função central que é chamada toda vez que o Firestore notifica uma mudança.
+ * Ela orquestra a atualização da interface e verificações automáticas.
  */
 function onDataChange(newState) {
     dbState = newState; 
     
-    // --- AUTOMAÇÃO DE CUSTOS FIXOS ---
-    // Verifica se virou o mês e precisa gerar os custos pendentes
+    // 1. Automação de Custos Fixos (Verifica virada de mês)
     if (userId && dbState.custos.length > 0) {
         store.verificarGerarCustosFixos(userId, dbState)
             .catch(err => console.error("Erro na automação de custos:", err));
     }
-    // ---------------------------------
 
-    // Atualiza toda a Interface
+    // 2. Prepara Filtros do Dashboard (Necessário antes de renderizar os gráficos)
+    ui.populateDashboardYears(dbState);
+
+    // 3. Atualiza o Dashboard (Lê os filtros aplicados)
     ui.updateDashboard(dbState);
+
+    // 4. Renderiza Seções Principais
     ui.renderKanban(dbState);
     ui.renderClientes(dbState);
     ui.renderContratos(dbState);
@@ -46,44 +51,45 @@ function onDataChange(newState) {
     ui.renderCustos(dbState); 
     ui.renderCalendario(calendarioData, dbState);
     
-    // Atualiza os Selects (comboboxes)
+    // 5. Popula Selects (Comboboxes)
     ui.populateEventoClienteSelect(dbState);
     ui.populateEventoSelect(dbState);
     ui.populateCustoFotografoSelect(dbState);
     ui.populateContratoClienteSelect(dbState);
     ui.populateEntregaEventoSelect(dbState, selectedEventIdForEntrega);
     
-    // Atualiza seção de Entregas (se visível)
+    // 6. Lógica Condicional de Seções Visíveis
+    
+    // Seção Entregas
     if (selectedEventIdForEntrega) {
         const evento = dbState.eventos.find(e => e.id === selectedEventIdForEntrega);
         ui.renderEntregaCards(evento, dbState);
     } else {
         ui.renderEntregasAtrasadas(dbState);
     }
-    
     const entregaSection = document.getElementById('section-entrega');
     if (entregaSection && !entregaSection.classList.contains('hidden')) {
         ui.renderConfigPrazos(dbState);
     }
 
-    // Atualiza seção Financeira (se visível)
+    // Seção Financeiro (Gráficos precisam ser redesenhados se visíveis)
     const financeiroSection = document.getElementById('section-financeiro');
     if (financeiroSection && !financeiroSection.classList.contains('hidden')) {
         ui.renderContasAReceber(dbState);
         ui.renderFluxoDeCaixaChart(dbState);
     }
 
-    // Atualiza Configurações
+    // Seção Configurações
     ui.renderTemplates(dbState);
     ui.renderPacotes(dbState);
 
-    // Recarrega ícones
+    // Ícones
     if (window.lucide) window.lucide.createIcons();
 }
+/* [FIM: MAIN_CORE_LOGIC] */
 
-/**
- * Callback de Login
- */
+
+/* [INICIO: MAIN_AUTH_CALLBACKS] - Callbacks de Login/Logout */
 function onLogin(user) {
     userId = user.uid;
     document.getElementById('login-overlay').classList.add('hidden');
@@ -95,9 +101,6 @@ function onLogin(user) {
     unsubscribeListeners = store.setupRealtimeListeners(userId, onDataChange);
 }
 
-/**
- * Callback de Logout
- */
 function onLogout() {
     userId = null;
     document.getElementById('login-overlay').classList.remove('hidden');
@@ -105,29 +108,27 @@ function onLogout() {
     document.getElementById('app-container').classList.remove('flex');
     document.getElementById('auth-status').innerText = "Desconectado";
     
-    // Cancela listeners antigos
+    // Limpa listeners e estado
     unsubscribeListeners.forEach(unsub => unsub());
     unsubscribeListeners = [];
-    
-    // Reseta estado
     dbState = { eventos: [], clientes: [], contratos: [], fotografos: [], financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], configuracoes: [] };
     onDataChange(dbState); 
 }
+/* [FIM: MAIN_AUTH_CALLBACKS] */
 
-// Inicialização quando a página carrega
+
+/* [INICIO: MAIN_INIT] - Inicialização (DOMContentLoaded) */
 document.addEventListener('DOMContentLoaded', () => {
     
     setupAuthListeners(onLogin, onLogout);
     initDragAndDrop(); 
     
-    // --- WINDOW.APP: Funções expostas para o HTML (onclick) ---
+    /* [INICIO: MAIN_WINDOW_APP] - API Pública para o HTML */
     window.app = {
-        // Navegação
+        // --- Navegação ---
         showSection: (sectionId) => ui.showSection(sectionId, dbState, calendarioData),
-        // ... outras funções ...
-        openEditClienteModal: (clienteId) => ui.openEditClienteModal(clienteId, dbState),
-        closeEditClienteModal: ui.closeEditClienteModal,
-        // Modais e Dossiê
+        
+        // --- Modais ---
         openDossieModal: (contratoId) => ui.openDossieModal(contratoId, dbState),
         openDossieModalFromEvento: (eventoId) => {
             const contrato = dbState.contratos.find(c => c.eventoId === eventoId);
@@ -138,11 +139,15 @@ document.addEventListener('DOMContentLoaded', () => {
         openAddPaymentModal: ui.openAddPaymentModal,
         openEditContratoModal: (contratoId) => ui.openEditContratoModal(contratoId, dbState),
         
-        // Gerador e Calendário
+        // Novas funções de Cliente
+        openEditClienteModal: (clienteId) => ui.openEditClienteModal(clienteId, dbState),
+        closeEditClienteModal: ui.closeEditClienteModal,
+        
+        // --- Funcionalidades Específicas ---
         abrirGerador: (contratoId) => ui.abrirGerador(contratoId, dbState),
         abrirNovoEventoDoCalendario: ui.abrirNovoEventoDoCalendario,
         
-        // Entregas e Prazos
+        // --- Entregas e Prazos ---
         viewEntregaFromAtraso: (eventId) => {
             selectedEventIdForEntrega = eventId;
             ui.viewEntregaFromAtraso(eventId, dbState);
@@ -166,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
             store.saveConfigPrazos(userId, prazos).then(() => alert("Configurações salvas!")).catch(e => alert(e.message));
         },
 
-        // Edição de Cadastros
+        // --- Configurações (Templates/Pacotes/Colunas) ---
         editTemplate: (templateId) => {
             if (!templateId) return;
             const template = dbState.templates.find(t => t.id === templateId);
@@ -185,23 +190,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 store.updateColumn(userId, columnId, newName.trim()).catch(e => alert(e.message));
             }
         },
+        
+        // --- Helpers ---
         getDbState: () => dbState,
         updatePackageSelect: ui.updatePackageSelect, 
 
-        // Kanban Drag & Drop Logic
+        // --- Drag & Drop ---
         updateEventoColuna: (eventoId, novaColunaId) => {
             if (!userId) return;
             store.updateEventoColuna(userId, eventoId, novaColunaId).catch(e => alert(e.message));
         },
 
-        // --- NOVAS FUNÇÕES PARA CUSTOS FIXOS ---
+        // --- Custos e Recorrência ---
         toggleRecorrencia: (custoId, deveRepetir) => {
             if (!userId) return;
-            // Mensagem amigável para confirmar a ação
             const msg = deveRepetir 
                 ? "Deseja tornar este custo recorrente? Ele será gerado automaticamente nos próximos meses." 
                 : "Deseja parar a repetição mensal deste custo?";
-            
             if(confirm(msg)) {
                 store.toggleCustoRecorrencia(userId, custoId, deveRepetir).catch(e => alert(e.message));
             }
@@ -212,9 +217,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 store.confirmarCustoPendente(userId, custoId).catch(e => alert(e.message));
             }
         },
-        // ----------------------------------------
         
-        // Exclusão Genérica
+        // --- Exclusão Genérica (Delete) ---
         deleteItem: (collectionName, id) => {
             if (!userId) return;
             let message = `Tem certeza que deseja excluir este item?`;
@@ -239,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
 
-        // Exportação
+        // --- Exportação ---
         exportarCSV: () => {
             if (!dbState.eventos || dbState.eventos.length === 0) {
                 alert("Não há dados suficientes para exportar.");
@@ -286,42 +290,57 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.removeChild(link);
         }
     };
+    /* [FIM: MAIN_WINDOW_APP] */
 
-    // Inicializa listeners do Gerador
+
+    /* [INICIO: MAIN_LISTENERS] - Listeners de Eventos do DOM */
+    
     initGeradorListeners(); 
 
-    // --- EVENT LISTENERS DE FORMULÁRIOS ---
+    // --- Filtros Dashboard ---
+    const filtroAno = document.getElementById('dashboard-filtro-ano');
+    const filtroMes = document.getElementById('dashboard-filtro-mes');
+    if (filtroAno) {
+        filtroAno.addEventListener('change', () => ui.updateDashboard(dbState));
+    }
+    if (filtroMes) {
+        filtroMes.addEventListener('change', () => ui.updateDashboard(dbState));
+    }
 
+    // --- Navegação Calendário ---
+    document.getElementById('calendario-prev').addEventListener('click', () => { ui.mudarMes(-1, calendarioData, dbState); });
+    document.getElementById('calendario-next').addEventListener('click', () => { ui.mudarMes(1, calendarioData, dbState); });
+    document.getElementById('mobile-menu-button').addEventListener('click', () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); });
+
+    // --- Configuração: Selects ---
     const templateTypeSelect = document.getElementById('template-link-tipo');
     if (templateTypeSelect) {
         templateTypeSelect.addEventListener('change', (e) => {
             ui.updatePackageSelect('template-link-pacote', e.target.value, dbState);
         });
     }
-    // Listener para Editar Cliente
-    const formEditCliente = document.getElementById('form-edit-cliente');
-    if (formEditCliente) {
-        formEditCliente.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const clienteId = document.getElementById('edit-cliente-id').value;
-            
-            const data = {
-                nome: document.getElementById('edit-cliente-nome').value,
-                telefone: document.getElementById('edit-cliente-telefone').value,
-                email: document.getElementById('edit-cliente-email').value,
-                documento: document.getElementById('edit-cliente-documento').value,
-                endereco: document.getElementById('edit-cliente-endereco').value
-            };
-
-            store.updateCliente(userId, clienteId, data)
-                .then(() => {
-                    ui.closeEditClienteModal();
-                    // Opcional: Feedback visual
-                })
-                .catch(err => alert(err.message));
+    const contratoClienteSelect = document.getElementById('contrato-cliente');
+    if (contratoClienteSelect) {
+        contratoClienteSelect.addEventListener('change', (e) => { ui.updateContratoEventoSelect(e.target.value, dbState); });
+    }
+    const entregaEventoSelect = document.getElementById('entrega-evento-select');
+    if (entregaEventoSelect) {
+        entregaEventoSelect.addEventListener('change', (e) => {
+            selectedEventIdForEntrega = e.target.value; 
+            if (selectedEventIdForEntrega) {
+                const evento = dbState.eventos.find(ev => ev.id === selectedEventIdForEntrega);
+                document.getElementById('entrega-default-view').classList.add('hidden');
+                document.getElementById('entrega-management-area').classList.remove('hidden');
+                ui.renderEntregaCards(evento, dbState);
+            } else {
+                document.getElementById('entrega-default-view').classList.remove('hidden');
+                document.getElementById('entrega-management-area').classList.add('hidden');
+                ui.renderEntregasAtrasadas(dbState);
+            }
         });
     }
 
+    // --- Formulários: CRIAÇÃO ---
     const pacoteForm = document.getElementById('form-pacote');
     if (pacoteForm) {
         pacoteForm.addEventListener('submit', (e) => {
@@ -418,25 +437,18 @@ document.addEventListener('DOMContentLoaded', () => {
         store.handleFormSubmit(userId, 'fotografos', data).then(() => e.target.reset()).catch(e => alert(e.message));
     });
     
-    // ATUALIZADO: FORMULÁRIO DE CUSTOS COM CHECKBOX
     document.getElementById('form-custo').addEventListener('submit', (e) => {
         e.preventDefault();
-        
-        // Pega o checkbox de repetir
         const isRepeating = e.target.elements['custo-repetir'] ? e.target.elements['custo-repetir'].checked : false;
-
         const data = {
             data: e.target.elements['custo-data'].value,
             descricao: e.target.elements['custo-descricao'].value, 
             valor: parseFloat(e.target.elements['custo-valor'].value), 
             eventoId: e.target.elements['custo-evento'].value,
             fotografoId: e.target.elements['custo-fotografo'].value,
-            
-            // Novos campos para a lógica de custos fixos
             repetir: isRepeating,
-            status: 'Pago' // Ao registrar manualmente, assumimos que já foi pago ou está sendo pago agora
+            status: 'Pago' // Assumimos que o registro manual é de um pagamento realizado
         };
-
         store.handleFormSubmit(userId, 'custos', data).then(() => {
             e.target.reset();
             document.getElementById('custo-data').valueAsDate = new Date();
@@ -463,101 +475,46 @@ document.addEventListener('DOMContentLoaded', () => {
         store.handleFormSubmit(userId, 'financeiro', data).then(() => ui.closeAddPaymentModal()).catch(e => alert(e.message));
     });
     
+    // --- Formulários: EDIÇÃO ---
+    
+    // Edição de Contrato (com valor e histórico)
     document.getElementById('edit-contract-form').addEventListener('submit', (e) => {
         e.preventDefault();
         const contratoId = e.target.elements['edit-contrato-id'].value;
-        
         const dataToUpdate = {
             valorTotal: parseFloat(e.target.elements['edit-contrato-valor'].value),
-            
-            // NOVO: Salva o histórico de texto
             historico_valores: e.target.elements['edit-contrato-historico'].value,
-            
             status: e.target.elements['edit-contrato-status'].value,
             link: e.target.elements['edit-contrato-link'].value,
             formaPagamento: e.target.elements['edit-contrato-forma-pagamento'].value
         };
-        
-        store.updateContrato(userId, contratoId, dataToUpdate)
-            .then(() => ui.closeEditContratoModal())
-            .catch(e => alert(e.message));
+        store.updateContrato(userId, contratoId, dataToUpdate).then(() => ui.closeEditContratoModal()).catch(e => alert(e.message));
     });
+
+    // Edição de Cliente
+    const formEditCliente = document.getElementById('form-edit-cliente');
+    if (formEditCliente) {
+        formEditCliente.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const clienteId = document.getElementById('edit-cliente-id').value;
+            const data = {
+                nome: document.getElementById('edit-cliente-nome').value,
+                telefone: document.getElementById('edit-cliente-telefone').value,
+                email: document.getElementById('edit-cliente-email').value,
+                documento: document.getElementById('edit-cliente-documento').value,
+                endereco: document.getElementById('edit-cliente-endereco').value
+            };
+            store.updateCliente(userId, clienteId, data).then(() => ui.closeEditClienteModal()).catch(err => alert(err.message));
+        });
+    }
     
     document.getElementById('cancel-payment-button').addEventListener('click', ui.closeAddPaymentModal);
     document.getElementById('cancel-edit-contract-button').addEventListener('click', ui.closeEditContratoModal);
-    document.getElementById('contrato-cliente').addEventListener('change', (e) => { ui.updateContratoEventoSelect(e.target.value, dbState); });
-    
-    document.getElementById('entrega-evento-select').addEventListener('change', (e) => {
-        selectedEventIdForEntrega = e.target.value; 
-        if (selectedEventIdForEntrega) {
-            const evento = dbState.eventos.find(ev => ev.id === selectedEventIdForEntrega);
-            document.getElementById('entrega-default-view').classList.add('hidden');
-            document.getElementById('entrega-management-area').classList.remove('hidden');
-            ui.renderEntregaCards(evento, dbState);
-        } else {
-            document.getElementById('entrega-default-view').classList.remove('hidden');
-            document.getElementById('entrega-management-area').classList.add('hidden');
-            ui.renderEntregasAtrasadas(dbState);
-        }
-    });
-    // ... Imports ...
-
-function onDataChange(newState) {
-    dbState = newState; 
-    
-    if (userId && dbState.custos.length > 0) {
-        store.verificarGerarCustosFixos(userId, dbState)
-            .catch(err => console.error("Erro na automação de custos:", err));
-    }
-
-    // NOVO: Popula o filtro de anos antes de atualizar o dashboard
-    // Isso garante que os anos disponíveis (2025, 2026...) apareçam no select
-    ui.populateDashboardYears(dbState);
-
-    ui.updateDashboard(dbState);
-    // ... (Resto das renderizações igual) ...
-}
-
-// ... onLogin e onLogout iguais ...
-
-document.addEventListener('DOMContentLoaded', () => {
-    
-    setupAuthListeners(onLogin, onLogout);
-    initDragAndDrop(); 
-
-    // ... window.app igual ...
-
-    // NOVO: Listeners para os filtros do Dashboard
-    const filtroAno = document.getElementById('dashboard-filtro-ano');
-    const filtroMes = document.getElementById('dashboard-filtro-mes');
-
-    if (filtroAno) {
-        filtroAno.addEventListener('change', () => {
-            // Se o usuário selecionar "Geral" (todos), podemos desabilitar o mês ou resetar
-            // Mas por simplicidade, apenas atualizamos
-            ui.updateDashboard(dbState);
-        });
-    }
-
-    if (filtroMes) {
-        filtroMes.addEventListener('change', () => {
-            ui.updateDashboard(dbState);
-        });
-    }
-    
-    // ... Resto dos listeners iguais ...
-});
-    
-    document.getElementById('calendario-prev').addEventListener('click', () => { ui.mudarMes(-1, calendarioData, dbState); });
-    document.getElementById('calendario-next').addEventListener('click', () => { ui.mudarMes(1, calendarioData, dbState); });
-    document.getElementById('mobile-menu-button').addEventListener('click', () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); });
 
     // Inicialização de datas nos forms
     document.getElementById('contrato-data').valueAsDate = new Date();
     document.getElementById('payment-date').valueAsDate = new Date();
     document.getElementById('custo-data').valueAsDate = new Date();
+    /* [FIM: MAIN_LISTENERS] */
 });
-
-
-
-
+/* [FIM: MAIN_INIT] */
