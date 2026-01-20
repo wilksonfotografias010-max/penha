@@ -714,6 +714,14 @@ export function populateEntregaEventoSelect(dbState, selectedEventIdForEntrega) 
 export function showSection(sectionId, dbState, calendarioData) {
     document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
     const section = document.getElementById(sectionId);
+    // Em js/ui.js > showSection
+    if (sectionId === 'section-relatorios') {
+        // Opcional: setar mês atual sempre que abrir
+        const elMes = document.getElementById('relatorio-mes');
+        if(elMes && !elMes.value) elMes.value = new Date().getMonth();
+        
+        renderRelatorioBalanco(dbState);
+    }
     if (section) {
         section.classList.remove('hidden');
         if (sectionId === 'section-calendario' && calendarioData) renderCalendario(calendarioData, dbState);
