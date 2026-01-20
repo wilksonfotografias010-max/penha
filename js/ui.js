@@ -812,17 +812,53 @@ export function populateEntregaEventoSelect(dbState, selectedEventIdForEntrega) 
 
 // --- FUNÇÕES DE MODAL ---
 
+// js/ui.js
+
+// ... (Mantenha todo o código anterior até chegar na função showSection) ...
+
+// --- FUNÇÕES DE NAVEGAÇÃO E MODAL ---
+
 export function showSection(sectionId, dbState, calendarioData) {
+    // 1. Esconde todas as seções
     document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+    
+    // 2. Mostra a seção desejada
     const section = document.getElementById(sectionId);
     if (section) {
         section.classList.remove('hidden');
+        
+        // --- LÓGICA DE CARREGAMENTO ESPECÍFICO POR ABA ---
+        
+        // Se for Calendário, renderiza o grid
         if (sectionId === 'section-calendario' && calendarioData) {
             renderCalendario(calendarioData, dbState);
+        }
+        
+        // NOVO: Se for Financeiro, força a renderização das tabelas e gráficos
+        if (sectionId === 'section-financeiro') {
+            console.log("Atualizando dados financeiros...");
+            renderContasAReceber(dbState);
+            renderFluxoDeCaixaChart(dbState);
+            // Também garantimos que as listas principais estejam atualizadas
+            renderFinanceiro(dbState);
+            renderCustos(dbState);
+        }
+
+        // Se for Entregas, também é bom garantir
+        if (sectionId === 'section-entrega') {
+            const select = document.getElementById('entrega-evento-select');
+            // Se tiver evento selecionado, renderiza cards, senão renderiza atrasos
+            if (select && select.value) {
+                const evento = dbState.eventos.find(e => e.id === select.value);
+                renderEntregaCards(evento, dbState);
+            } else {
+                renderEntregasAtrasadas(dbState);
+            }
         }
     }
 }
 
+// ... (Mantenha o resto do arquivo igual: openAddPaymentModal, openDossieModal, etc...) ...
 export function openAddPaymentModal(contratoId = null) {
     document.getElementById('modal-add-payment').classList.remove('hidden');
     document.getElementById('add-payment-form').reset();
