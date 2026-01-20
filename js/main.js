@@ -298,6 +298,29 @@ document.addEventListener('DOMContentLoaded', () => {
             ui.updatePackageSelect('template-link-pacote', e.target.value, dbState);
         });
     }
+    // Listener para Editar Cliente
+    const formEditCliente = document.getElementById('form-edit-cliente');
+    if (formEditCliente) {
+        formEditCliente.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const clienteId = document.getElementById('edit-cliente-id').value;
+            
+            const data = {
+                nome: document.getElementById('edit-cliente-nome').value,
+                telefone: document.getElementById('edit-cliente-telefone').value,
+                email: document.getElementById('edit-cliente-email').value,
+                documento: document.getElementById('edit-cliente-documento').value,
+                endereco: document.getElementById('edit-cliente-endereco').value
+            };
+
+            store.updateCliente(userId, clienteId, data)
+                .then(() => {
+                    ui.closeEditClienteModal();
+                    // Opcional: Feedback visual
+                })
+                .catch(err => alert(err.message));
+        });
+    }
 
     const pacoteForm = document.getElementById('form-pacote');
     if (pacoteForm) {
@@ -487,5 +510,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('payment-date').valueAsDate = new Date();
     document.getElementById('custo-data').valueAsDate = new Date();
 });
+
 
 
