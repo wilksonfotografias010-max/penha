@@ -1,84 +1,97 @@
-// js/auth.js
+/* [INICIO: AUTH_IMPORTS] */
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { app } from './firebase.js';
+import * as ui from './ui.js'; // Para mostrar mensagens de erro
+/* [FIM: AUTH_IMPORTS] */
 
-// ######################################################
-// ARQUIVO 6: AUTENTICAÇÃO (O Porteiro)
-// ######################################################
-// Este arquivo cuida apenas do login, registro, logout
-// e monitora o estado da autenticação.
+const auth = getAuth(app);
 
-import { auth } from './firebase.js'; // Importa a conexão do arquivo 2
-import { 
-    onAuthStateChanged, 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword, 
-    signOut 
-} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-
-// Importa as funções de UI para mostrar/esconder erros de login
-import { showLoginError, hideLoginError } from './ui.js';
-
-/**
- * Inicializa os listeners de autenticação.
- * @param {function} onLogin - Função do main.js a ser chamada quando o usuário logar.
- * @param {function} onLogout - Função do main.js a ser chamada quando o usuário deslogar.
- */
-export function setupAuthListeners(onLogin, onLogout) {
+/* [INICIO: AUTH_LISTENERS] */
+export function setupAuthListeners(onLoginCallback, onLogoutCallback) {
     
-    // 1. Monitora o estado da autenticação
+    // 1. Monitora o estado da autenticação (Logado/Deslogado)
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            // Usuário está logado
-            hideLoginError();
-            onLogin(user); // Chama a função principal de login
+            console.log("Usuário logado:", user.email);
+            onLoginCallback(user);
         } else {
-            // Usuário está deslogado
-            onLogout(); // Chama a função principal de logout
+            console.log("Usuário deslogado");
+            onLogoutCallback();
         }
     });
 
-    // 2. Listener do formulário de Login
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        hideLoginError();
-        
-        try {
-            await signInWithEmailAndPassword(auth, email, password);
-            // O onAuthStateChanged vai cuidar do resto
-        } catch (error) {
-            console.error("Erro de login:", error.code);
-            showLoginError("Email ou senha incorretos.");
-        }
-    });
+    // 2. Listener do Formulário de Login
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Limpa erro anterior
+            ui.hideLoginError();
 
-    // 3. Listener do botão de Registrar
-    document.getElementById('register-button').addEventListener('click', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        hideLoginError();
-
-        if (password.length < 6) {
-            showLoginError("A senha deve ter no mínimo 6 caracteres.");
-            return;
-        }
-
-        try {
-            await createUserWithEmailAndPassword(auth, email, password);
-            // O onAuthStateChanged vai cuidar do resto
-        } catch (error) {
-            console.error("Erro de registro:", error.code);
-            if (error.code === 'auth/email-already-in-use') {
-                showLoginError("Este email já está em uso.");
-            } else {
-                showLoginError("Erro ao registrar. Tente novamente.");
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                // O onAuthStateChanged vai lidar com o resto
+            } catch (error) {
+                console.error("Erro no login:", error);
+                let msg = "Falha ao entrar.";
+                if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    msg = "Email ou senha incorretos.";
+                } else if (error.code === 'auth/too-many-requests') {
+                    msg = "Muitas tentativas. Tente mais tarde.";
+                }
+                ui.showLoginError(msg);
             }
-        }
-    });
+        });
+    }
 
-    // 4. Listener do botão de Sair
-    document.getElementById('logout-button').addEventListener('click', () => {
-        signOut(auth);
-    });
+    // 3. Listener do Botão de Logout
+    const logoutBtn = document.getElementById('logout-button');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error("Erro ao sair:", error);
+            }
+        });
+    }
+
+    // 4. Listener do Botão "Criar Conta"
+    // Este botão usa os mesmos campos de Email/Senha do form de login para criar a conta
+    const registerBtn = document.getElementById('register-button');
+    if (registerBtn) {
+        registerBtn.addEventListener('click', async (e) => {
+            e.preventDefault(); // Evita submit do form se estiver dentro dele
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                ui.showLoginError("Preencha email e senha para criar a conta.");
+                return;
+            }
+
+            if (password.length < 6) {
+                ui.showLoginError("A senha deve ter pelo menos 6 caracteres.");
+                return;
+            }
+
+            if(confirm("Deseja criar uma nova conta com este email e senha?")) {
+                try {
+                    await createUserWithEmailAndPassword(auth, email, password);
+                    alert("Conta criada com sucesso! Você já está logado.");
+                } catch (error) {
+                    console.error("Erro ao criar conta:", error);
+                    let msg = "Erro ao criar conta.";
+                    if (error.code === 'auth/email-already-in-use') msg = "Este email já está cadastrado.";
+                    if (error.code === 'auth/invalid-email') msg = "Email inválido.";
+                    ui.showLoginError(msg);
+                }
+            }
+        });
+    }
 }
+/* [FIM: AUTH_LISTENERS] */
