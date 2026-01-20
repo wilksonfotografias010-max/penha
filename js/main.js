@@ -82,6 +82,20 @@ function onDataChange(newState) {
     // Seção Configurações
     ui.renderTemplates(dbState);
     ui.renderPacotes(dbState);
+    // ... (dentro de onDataChange)
+    ui.renderTemplates(dbState);
+    ui.renderPacotes(dbState);
+
+    // 👇 COLOQUE ISTO AQUI 👇
+    // Atualiza Selects e Lista de Categorias
+    ui.populateDynamicSelects(dbState);
+    ui.renderCategorias(dbState);
+    // 👆 ------------------ 👆
+
+    // Ícones
+    if (window.lucide) window.lucide.createIcons();
+}
+/* [FIM: MAIN_CORE_LOGIC] */
 
     // Ícones
     if (window.lucide) window.lucide.createIcons();
@@ -190,6 +204,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 store.updateColumn(userId, columnId, newName.trim()).catch(e => alert(e.message));
             }
         },
+        // ... (dentro de window.app)
+        editPacote: (pacoteId) => {
+            if (!pacoteId) return;
+            const pacote = dbState.pacotes.find(p => p.id === pacoteId);
+            if (pacote) ui.populatePacoteForm(pacote);
+        },
+        clearPacoteForm: () => ui.clearPacoteForm(),
+
+        // 👇 COLOQUE ISTO AQUI 👇
+        // --- Categorias ---
+        editCategoria: (id) => {
+            const cat = dbState.categorias.find(c => c.id === id);
+            if (cat) ui.populateCategoriaForm(cat);
+        },
+        clearCategoriaForm: () => ui.clearCategoriaForm(),
+        // 👆 ------------------ 👆
+
+        editColumn: (columnId, currentName) => {
+            // ...
         
         // --- Helpers ---
         getDbState: () => dbState,
@@ -364,6 +397,34 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) { alert("Erro: " + err.message); }
         });
     }
+    // ... (dentro dos listeners)
+    const pacoteForm = document.getElementById('form-pacote');
+    if (pacoteForm) {
+        // ... (código do pacoteForm) ...
+            } catch (err) { alert("Erro: " + err.message); }
+        });
+    }
+
+    // 👇 COLOQUE ISTO AQUI 👇
+    // --- Formulário de Categorias ---
+    const categoriaForm = document.getElementById('form-categoria');
+    if (categoriaForm) {
+        categoriaForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = document.getElementById('categoria-id').value;
+            const nome = document.getElementById('categoria-nome').value;
+            
+            if(!nome) return;
+
+            store.saveCategoria(userId, { nome }, id || null)
+                .then(() => ui.clearCategoriaForm())
+                .catch(err => alert(err.message));
+        });
+    }
+    // 👆 ------------------ 👆
+
+    const templateForm = document.getElementById('form-template');
+    // ...
 
     const templateForm = document.getElementById('form-template');
     if (templateForm) {
@@ -518,3 +579,4 @@ document.addEventListener('DOMContentLoaded', () => {
     /* [FIM: MAIN_LISTENERS] */
 });
 /* [FIM: MAIN_INIT] */
+
