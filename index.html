@@ -14,25 +14,40 @@
 <body class="bg-gray-100 font-sans text-gray-800">
 
     <div id="login-overlay" class="fixed inset-0 bg-gray-200 z-50 flex items-center justify-center">
-        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm">
-            <div class="flex items-center justify-center mb-6">
-                <i data-lucide="camera" class="h-10 w-10 text-blue-600"></i>
-                <h1 class="text-2xl font-bold ml-2 text-gray-800">Gestor Studio</h1>
-            </div>
-            <form id="login-form">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="email" class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-500" required>
+        <div class="bg-white p-4 rounded-lg shadow-md mb-6 flex flex-col md:flex-row gap-4 items-end">
+                    <div class="flex-1 w-full">
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Ano</label>
+                        <select id="relatorio-ano" class="w-full p-2 border rounded bg-gray-50">
+                            </select>
+                    </div>
+                    <div class="flex-1 w-full">
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Mês</label>
+                        <select id="relatorio-mes" class="w-full p-2 border rounded bg-gray-50">
+                            <option value="0">Janeiro</option>
+                            <option value="1">Fevereiro</option>
+                            <option value="2">Março</option>
+                            <option value="3">Abril</option>
+                            <option value="4">Maio</option>
+                            <option value="5">Junho</option>
+                            <option value="6">Julho</option>
+                            <option value="7">Agosto</option>
+                            <option value="8">Setembro</option>
+                            <option value="9">Outubro</option>
+                            <option value="10">Novembro</option>
+                            <option value="11">Dezembro</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex-1 w-full">
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Filtrar por Vendedor</label>
+                        <select id="relatorio-vendedor" class="w-full p-2 border rounded bg-gray-50">
+                            <option value="todos">Geral (Todos)</option>
+                            </select>
+                    </div>
+                    <button onclick="window.app.gerarRelatorio()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 w-full md:w-auto h-10 flex items-center justify-center">
+                        <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i> Atualizar
+                    </button>
                 </div>
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700">Senha</label>
-                    <input type="password" id="password" class="w-full mt-1 p-2 border rounded focus:ring-2 focus:ring-blue-500" required>
-                </div>
-                <div id="login-error-message" class="hidden text-red-500 text-sm mb-4 text-center"></div>
-                <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Entrar</button>
-                <button type="button" id="register-button" class="w-full mt-2 text-blue-600 text-sm hover:underline">Criar conta</button>
-            </form>
-        </div>
     </div>
     <div id="app-container" class="hidden flex h-screen overflow-hidden">
         
