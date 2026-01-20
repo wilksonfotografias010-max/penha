@@ -1,5 +1,4 @@
-// js/store.js
-
+/* [INICIO: STORE_IMPORTS] - Importações do Firebase */
 import { db } from './firebase.js'; 
 import { 
     collection, 
@@ -14,15 +13,18 @@ import {
     writeBatch,
     setDoc 
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+/* [FIM: STORE_IMPORTS] */
 
-// ... (setupRealtimeListeners e outras funções mantêm-se iguais, adicione as novas abaixo) ...
 
+/* [INICIO: STORE_LISTENERS] - Monitoramento em Tempo Real */
 export function setupRealtimeListeners(userId, onDataChangeCallback) {
     if (!userId) return [];
 
+    // Estado inicial com todas as coleções
     const dbState = { 
         eventos: [], clientes: [], contratos: [], fotografos: [], 
-        financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], configuracoes: [] 
+        financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], 
+        configuracoes: [], categorias: [] 
     };
     
     const collections = ['eventos', 'clientes', 'contratos', 'fotografos', 'financeiro', 'custos', 'colunas', 'templates', 'pacotes', 'configuracoes', 'categorias'];
@@ -31,17 +33,17 @@ export function setupRealtimeListeners(userId, onDataChangeCallback) {
     collections.forEach(col => {
         const collectionPath = `users/${userId}/${col}`;
         const unsub = onSnapshot(collection(db, collectionPath), (querySnapshot) => {
+            
             dbState[col] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-            // Ordenações
-            if (col === 'custos') {
-                // Ordena custos por data decrescente
-                dbState.custos.sort((a, b) => new Date(b.data) - new Date(a.data));
-            }
+            // Ordenações automáticas
             if (col === 'clientes') dbState.clientes.sort((a, b) => a.nome.localeCompare(b.nome));
             if (col === 'eventos') dbState.eventos.sort((a, b) => new Date(a.data) - new Date(b.data)); 
             if (col === 'financeiro') dbState.financeiro.sort((a, b) => new Date(b.data) - new Date(a.data));
+            if (col === 'custos') dbState.custos.sort((a, b) => new Date(b.data) - new Date(a.data));
             if (col === 'colunas') dbState.colunas.sort((a, b) => a.ordem - b.ordem);
+            if (col === 'categorias') dbState.categorias.sort((a, b) => a.nome.localeCompare(b.nome));
+            
             if (col === 'pacotes') {
                 dbState.pacotes.sort((a, b) => {
                     const catA = a.package_category_name || '';
@@ -53,64 +55,16 @@ export function setupRealtimeListeners(userId, onDataChangeCallback) {
             
             onDataChangeCallback(dbState);
         });
-        unsubscribeListeners.push(unsub);
-    });
-    /* [INICIO: STORE_LISTENER] - Configuração dos Listeners */
-export function setupRealtimeListeners(userId, onDataChangeCallback) {
-    if (!userId) return [];
-
-    // ADICIONADO: 'categorias' no estado inicial
-    const dbState = { 
-        eventos: [], clientes: [], contratos: [], fotografos: [], 
-        financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], configuracoes: [],
-        categorias: [] // Nova coleção
-    };
-    
-    // ADICIONADO: 'categorias' na lista de monitoramento
-    const collections = ['eventos', 'clientes', 'contratos', 'fotografos', 'financeiro', 'custos', 'colunas', 'templates', 'pacotes', 'configuracoes', 'categorias'];
-    let unsubscribeListeners = [];
-
-    collections.forEach(col => {
-        const collectionPath = `users/${userId}/${col}`;
-        const unsub = onSnapshot(collection(db, collectionPath), (querySnapshot) => {
-            dbState[col] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-            // Ordenações existentes...
-            if (col === 'custos') dbState.custos.sort((a, b) => new Date(b.data) - new Date(a.data));
-            if (col === 'clientes') dbState.clientes.sort((a, b) => a.nome.localeCompare(b.nome));
-            if (col === 'eventos') dbState.eventos.sort((a, b) => new Date(a.data) - new Date(b.data)); 
-            if (col === 'financeiro') dbState.financeiro.sort((a, b) => new Date(b.data) - new Date(a.data));
-            if (col === 'colunas') dbState.colunas.sort((a, b) => a.ordem - b.ordem);
-            
-            // ADICIONADO: Ordenação de categorias alfabética
-            if (col === 'categorias') dbState.categorias.sort((a, b) => a.nome.localeCompare(b.nome));
-
-            onDataChangeCallback(dbState);
-        });
+        
         unsubscribeListeners.push(unsub);
     });
 
     return unsubscribeListeners;
 }
-/* [FIM: STORE_LISTENER] */
+/* [FIM: STORE_LISTENERS] */
 
-// ... (Mantenha as outras funções do arquivo store.js) ...
 
-/* [INICIO: STORE_CATEGORIAS] - Funções para Categorias */
-export async function saveCategoria(userId, categoriaData, categoriaId) {
-    if (categoriaId) { 
-        await updateDoc(doc(db, `users/${userId}/categorias/${categoriaId}`), categoriaData); 
-    } else { 
-        await addDoc(collection(db, `users/${userId}/categorias`), categoriaData); 
-    }
-}
-/* [FIM: STORE_CATEGORIAS] */
-
-    return unsubscribeListeners;
-}
-
-// ... (handleFormSubmit, deleteSingleItem etc continuam iguais) ...
-
+/* [INICIO: STORE_GENERIC_CRUD] - Funções Básicas de Escrita/Deleção */
 export async function handleFormSubmit(userId, collectionName, data) {
     if (!userId) { console.error("Usuário não autenticado."); return; }
     try {
@@ -130,76 +84,167 @@ export async function deleteSingleItem(userId, collectionName, id) {
         throw new Error(`Falha ao deletar item de ${collectionName}`);
     }
 }
+/* [FIM: STORE_GENERIC_CRUD] */
 
-// --- FUNÇÕES DE LÓGICA DE NEGÓCIO ---
 
-// 1. Alterna se um custo deve se repetir ou não (Configuração)
+/* [INICIO: STORE_KANBAN] - Atualização de Colunas */
+export async function updateEventoColuna(userId, eventoId, novaColunaId) {
+    if (!userId || !eventoId || !novaColunaId) return;
+    const docRef = doc(db, `users/${userId}/eventos/${eventoId}`);
+    try {
+        await updateDoc(docRef, { colunaId: novaColunaId });
+    } catch (error) {
+        console.error("Erro ao atualizar coluna: ", error);
+        throw new Error("Falha ao mover o card.");
+    }
+}
+
+export async function updateColumn(userId, columnId, newName) {
+    if (!userId || !columnId || !newName) return;
+    const docRef = doc(db, `users/${userId}/colunas/${columnId}`);
+    try {
+        await updateDoc(docRef, { nome: newName });
+    } catch (error) {
+        console.error("Erro ao atualizar coluna: ", error);
+        throw new Error("Falha ao renomear a coluna.");
+    }
+}
+/* [FIM: STORE_KANBAN] */
+
+
+/* [INICIO: STORE_DELIVERY] - Lógica de Prazos e Entregas */
+export async function marcarEntregue(userId, eventId, tipo) {
+    if (!userId || !eventId || !tipo) return;
+    const docRef = doc(db, `users/${userId}/eventos/${eventId}`);
+    try {
+        await updateDoc(docRef, {
+            [`entrega_${tipo}_status`]: "Entregue",
+            [`entrega_${tipo}_data`]: new Date().toISOString().split('T')[0]
+        });
+    } catch (error) { throw new Error("Falha ao atualizar status."); }
+}
+
+export async function reverterEntrega(userId, eventId, tipo) {
+    if (!userId || !eventId || !tipo) return;
+    const docRef = doc(db, `users/${userId}/eventos/${eventId}`);
+    try {
+        await updateDoc(docRef, {
+            [`entrega_${tipo}_status`]: "Pendente",
+            [`entrega_${tipo}_data`]: null
+        });
+    } catch (error) { throw new Error("Falha ao reverter status."); }
+}
+
+export async function updateEventoPrazo(userId, eventId, tipo, novaData) {
+    if (!userId || !eventId || !tipo) return;
+    const docRef = doc(db, `users/${userId}/eventos/${eventId}`);
+    try {
+        await updateDoc(docRef, { [`prazo_${tipo}`]: novaData });
+    } catch (error) { throw new Error("Falha ao atualizar prazo."); }
+}
+
+export async function saveConfigPrazos(userId, prazosData) {
+    if (!userId) return;
+    const docRef = doc(db, `users/${userId}/configuracoes/global_prazos`);
+    try {
+        await setDoc(docRef, prazosData, { merge: true });
+    } catch (error) { throw new Error("Falha ao salvar configurações."); }
+}
+/* [FIM: STORE_DELIVERY] */
+
+
+/* [INICIO: STORE_CONTRACTS] - Atualização de Contratos e Clientes */
+export async function updateContrato(userId, contratoId, dataToUpdate) {
+    if (!userId || !contratoId) return;
+    const docRef = doc(db, `users/${userId}/contratos/${contratoId}`);
+    try {
+        await updateDoc(docRef, dataToUpdate);
+    } catch (error) { throw new Error("Falha ao atualizar contrato."); }
+}
+
+export async function updateCliente(userId, clienteId, data) {
+    if (!userId || !clienteId) return;
+    const docRef = doc(db, `users/${userId}/clientes/${clienteId}`);
+    try {
+        await updateDoc(docRef, data);
+    } catch (error) { throw new Error("Falha ao atualizar dados do cliente."); }
+}
+/* [FIM: STORE_CONTRACTS] */
+
+
+/* [INICIO: STORE_CONFIG] - Templates, Pacotes e Categorias */
+export async function saveTemplate(userId, templateData, templateId) {
+    if (!userId) throw new Error("Usuário não autenticado.");
+    if (templateId) {
+        await updateDoc(doc(db, `users/${userId}/templates/${templateId}`), templateData);
+    } else {
+        await addDoc(collection(db, `users/${userId}/templates`), templateData);
+    }
+}
+
+export async function savePacote(userId, pacoteData, pacoteId) {
+    if (!userId) throw new Error("Usuário não autenticado.");
+    if (pacoteId) {
+        await updateDoc(doc(db, `users/${userId}/pacotes/${pacoteId}`), pacoteData);
+    } else {
+        await addDoc(collection(db, `users/${userId}/pacotes`), pacoteData);
+    }
+}
+
+export async function saveCategoria(userId, categoriaData, categoriaId) {
+    if (!userId) throw new Error("Usuário não autenticado.");
+    if (categoriaId) { 
+        await updateDoc(doc(db, `users/${userId}/categorias/${categoriaId}`), categoriaData); 
+    } else { 
+        await addDoc(collection(db, `users/${userId}/categorias`), categoriaData); 
+    }
+}
+/* [FIM: STORE_CONFIG] */
+
+
+/* [INICIO: STORE_FINANCE_AUTOMATION] - Custos Fixos e Recorrência */
 export async function toggleCustoRecorrencia(userId, custoId, deveRepetir) {
     if (!userId || !custoId) return;
     const docRef = doc(db, `users/${userId}/custos/${custoId}`);
     try {
         await updateDoc(docRef, { repetir: deveRepetir });
-    } catch (error) {
-        throw new Error("Erro ao atualizar recorrência.");
-    }
+    } catch (error) { throw new Error("Erro ao atualizar recorrência."); }
 }
 
-// 2. Confirma um custo que foi gerado automaticamente (Passa de Pendente para Pago)
 export async function confirmarCustoPendente(userId, custoId) {
     if (!userId || !custoId) return;
     const docRef = doc(db, `users/${userId}/custos/${custoId}`);
     try {
         await updateDoc(docRef, { status: "Pago" });
-    } catch (error) {
-        throw new Error("Erro ao confirmar pagamento.");
-    }
+    } catch (error) { throw new Error("Erro ao confirmar pagamento."); }
 }
 
-// 3. O CORAÇÃO DA AUTOMAÇÃO: Gera custos do mês se não existirem
 export async function verificarGerarCustosFixos(userId, dbState) {
     if (!userId || !dbState.custos) return;
 
     const hoje = new Date();
-    const mesAtual = hoje.getMonth(); // 0 a 11
+    const mesAtual = hoje.getMonth();
     const anoAtual = hoje.getFullYear();
-    const stringMesAtual = `${anoAtual}-${String(mesAtual + 1).padStart(2, '0')}`; // Ex: "2026-02"
-
     const batch = writeBatch(db);
     let temNovosCustos = false;
 
-    // Filtra apenas os custos "Mestres" que devem repetir
-    // Um custo "Mestre" é um que foi criado manualmente pelo usuário com repetir=true
-    // Ou podemos considerar qualquer custo com repetir=true como um gerador em potencial
-    
-    // Lógica simplificada: Vamos olhar todos os custos com repetir=true
-    // E verificar se já existe um custo "filho" (ou clone) para o mês atual
-    
     const custosRecorrentes = dbState.custos.filter(c => c.repetir === true);
 
     custosRecorrentes.forEach(custoMestre => {
-        // Verifica se já existe um lançamento para este mês referente a este mestre
-        // Critério: Mesmo nome, mesmo valor, e a data cai no mês atual
-        // OU, idealmente, teríamos um campo 'id_pai', mas vamos usar heurística para compatibilidade
-        
-        // Vamos usar o ID do pai para rastreio se tiver, senão usa o próprio ID
         const mestreId = custoMestre.id_pai || custoMestre.id;
-
+        
+        // Verifica duplicidade neste mês
         const jaExisteNesteMes = dbState.custos.some(c => {
             if (!c.data) return false;
             const dataC = new Date(c.data + 'T00:00:00');
             const ehMesmoMes = dataC.getMonth() === mesAtual && dataC.getFullYear() === anoAtual;
             
-            // É o próprio mestre (se ele foi criado neste mês)
-            if (c.id === custoMestre.id && ehMesmoMes) return true;
-
-            // É um filho deste mestre
-            if (c.id_pai === mestreId && ehMesmoMes) return true;
-
+            if (c.id === custoMestre.id && ehMesmoMes) return true; // É o próprio mestre criado agora
+            if (c.id_pai === mestreId && ehMesmoMes) return true; // Já existe um filho
             return false;
         });
 
         if (!jaExisteNesteMes) {
-            // Cria o custo para este mês
             const diaVencimento = new Date(custoMestre.data + 'T00:00:00').getDate();
             const novaData = `${anoAtual}-${String(mesAtual + 1).padStart(2, '0')}-${String(diaVencimento).padStart(2, '0')}`;
             
@@ -208,101 +253,68 @@ export async function verificarGerarCustosFixos(userId, dbState) {
                 descricao: custoMestre.descricao,
                 valor: custoMestre.valor,
                 data: novaData,
-                eventoId: "", // Custo fixo geralmente não tem evento
+                eventoId: "", 
                 fotografoId: "",
-                repetir: false, // O filho não repete, só o pai
-                id_pai: mestreId, // Link para saber de onde veio
-                status: "Pendente" // Nasce pendente de confirmação
+                repetir: false, 
+                id_pai: mestreId,
+                status: "Pendente" 
             });
             temNovosCustos = true;
         }
     });
 
     if (temNovosCustos) {
-        console.log("Gerando novos custos fixos para o mês...");
+        console.log("Gerando novos custos fixos...");
         await batch.commit();
     }
 }
+/* [FIM: STORE_FINANCE_AUTOMATION] */
 
-// ... (Resto das funções como updateEventoColuna, marcarEntregue, etc mantêm-se iguais) ...
 
-export async function updateEventoColuna(userId, eventoId, novaColunaId) {
-    const docRef = doc(db, `users/${userId}/eventos/${eventoId}`);
-    await updateDoc(docRef, { colunaId: novaColunaId });
-}
-
-export async function marcarEntregue(userId, eventId, tipo) {
-    const docRef = doc(db, `users/${userId}/eventos/${eventId}`);
-    await updateDoc(docRef, { [`entrega_${tipo}_status`]: "Entregue", [`entrega_${tipo}_data`]: new Date().toISOString().split('T')[0] });
-}
-export async function reverterEntrega(userId, eventId, tipo) {
-    const docRef = doc(db, `users/${userId}/eventos/${eventId}`);
-    await updateDoc(docRef, { [`entrega_${tipo}_status`]: "Pendente", [`entrega_${tipo}_data`]: null });
-}
-export async function updateEventoPrazo(userId, eventId, tipo, novaData) {
-    const docRef = doc(db, `users/${userId}/eventos/${eventId}`);
-    await updateDoc(docRef, { [`prazo_${tipo}`]: novaData });
-}
-export async function saveConfigPrazos(userId, prazosData) {
-    const docRef = doc(db, `users/${userId}/configuracoes/global_prazos`);
-    await setDoc(docRef, prazosData, { merge: true });
-}
-export async function updateContrato(userId, contratoId, dataToUpdate) {
-    const docRef = doc(db, `users/${userId}/contratos/${contratoId}`);
-    await updateDoc(docRef, dataToUpdate);
-}
-export async function saveTemplate(userId, templateData, templateId) {
-    if (templateId) { await updateDoc(doc(db, `users/${userId}/templates/${templateId}`), templateData); } 
-    else { await addDoc(collection(db, `users/${userId}/templates`), templateData); }
-}
-export async function savePacote(userId, pacoteData, pacoteId) {
-    if (pacoteId) { await updateDoc(doc(db, `users/${userId}/pacotes/${pacoteId}`), pacoteData); } 
-    else { await addDoc(collection(db, `users/${userId}/pacotes`), pacoteData); }
-}
+/* [INICIO: STORE_COMPLEX_DELETE] - Deleção em Cascata */
 export async function deleteEventAndRelations(userId, eventoId) {
+    if (!userId || !eventoId) return;
     const batch = writeBatch(db);
-    const custosSnap = await getDocs(query(collection(db, `users/${userId}/custos`), where("eventoId", "==", eventoId)));
-    custosSnap.forEach(doc => batch.delete(doc.ref));
-    const contratosSnap = await getDocs(query(collection(db, `users/${userId}/contratos`), where("eventoId", "==", eventoId)));
-    for (const c of contratosSnap.docs) {
-        const pagSnap = await getDocs(query(collection(db, `users/${userId}/financeiro`), where("contratoId", "==", c.id)));
-        pagSnap.forEach(d => batch.delete(d.ref));
-        batch.delete(c.ref);
+    
+    // Custos
+    const custosSnapshot = await getDocs(query(collection(db, `users/${userId}/custos`), where("eventoId", "==", eventoId)));
+    custosSnapshot.forEach(doc => batch.delete(doc.ref));
+    
+    // Contratos e Pagamentos
+    const contratosSnapshot = await getDocs(query(collection(db, `users/${userId}/contratos`), where("eventoId", "==", eventoId)));
+    for (const contratoDoc of contratosSnapshot.docs) {
+        const pagamentosSnapshot = await getDocs(query(collection(db, `users/${userId}/financeiro`), where("contratoId", "==", contratoDoc.id)));
+        pagamentosSnapshot.forEach(doc => batch.delete(doc.ref));
+        batch.delete(contratoDoc.ref);
     }
+    
+    // O Evento
     batch.delete(doc(db, `users/${userId}/eventos/${eventoId}`));
     await batch.commit();
 }
-// Adicione isto ao final do js/store.js, antes de fechar o arquivo ou junto aos exports
 
-export async function updateCliente(userId, clienteId, data) {
-    if (!userId || !clienteId) return;
-    const docRef = doc(db, `users/${userId}/clientes/${clienteId}`);
-    try {
-        await updateDoc(docRef, data);
-    } catch (error) {
-        console.error("Erro ao atualizar cliente: ", error);
-        throw new Error("Falha ao atualizar dados do cliente.");
-    }
-}
 export async function deleteClientAndRelations(userId, clienteId) {
+    if (!userId || !clienteId) return;
     const batch = writeBatch(db);
-    const eventosSnap = await getDocs(query(collection(db, `users/${userId}/eventos`), where("clienteId", "==", clienteId)));
-    for (const ev of eventosSnap.docs) {
-        const custosSnap = await getDocs(query(collection(db, `users/${userId}/custos`), where("eventoId", "==", ev.id)));
-        custosSnap.forEach(d => batch.delete(d.ref));
-        batch.delete(ev.ref);
+    
+    // Eventos e Custos associados
+    const eventosSnapshot = await getDocs(query(collection(db, `users/${userId}/eventos`), where("clienteId", "==", clienteId)));
+    for (const eventoDoc of eventosSnapshot.docs) {
+        const custosSnapshot = await getDocs(query(collection(db, `users/${userId}/custos`), where("eventoId", "==", eventoDoc.id)));
+        custosSnapshot.forEach(doc => batch.delete(doc.ref));
+        batch.delete(eventoDoc.ref);
     }
-    const contratosSnap = await getDocs(query(collection(db, `users/${userId}/contratos`), where("clienteId", "==", clienteId)));
-    for (const c of contratosSnap.docs) {
-        const pagSnap = await getDocs(query(collection(db, `users/${userId}/financeiro`), where("contratoId", "==", c.id)));
-        pagSnap.forEach(d => batch.delete(d.ref));
-        batch.delete(c.ref);
+    
+    // Contratos e Pagamentos
+    const contratosSnapshot = await getDocs(query(collection(db, `users/${userId}/contratos`), where("clienteId", "==", clienteId)));
+    for (const contratoDoc of contratosSnapshot.docs) {
+        const pagamentosSnapshot = await getDocs(query(collection(db, `users/${userId}/financeiro`), where("contratoId", "==", contratoDoc.id)));
+        pagamentosSnapshot.forEach(doc => batch.delete(doc.ref));
+        batch.delete(contratoDoc.ref);
     }
+    
+    // O Cliente
     batch.delete(doc(db, `users/${userId}/clientes/${clienteId}`));
     await batch.commit();
 }
-export async function updateColumn(userId, columnId, newName) {
-    await updateDoc(doc(db, `users/${userId}/colunas/${columnId}`), { nome: newName });
-}
-
-
+/* [FIM: STORE_COMPLEX_DELETE] */
