@@ -500,6 +500,53 @@ document.addEventListener('DOMContentLoaded', () => {
             ui.renderEntregasAtrasadas(dbState);
         }
     });
+    // ... Imports ...
+
+function onDataChange(newState) {
+    dbState = newState; 
+    
+    if (userId && dbState.custos.length > 0) {
+        store.verificarGerarCustosFixos(userId, dbState)
+            .catch(err => console.error("Erro na automação de custos:", err));
+    }
+
+    // NOVO: Popula o filtro de anos antes de atualizar o dashboard
+    // Isso garante que os anos disponíveis (2025, 2026...) apareçam no select
+    ui.populateDashboardYears(dbState);
+
+    ui.updateDashboard(dbState);
+    // ... (Resto das renderizações igual) ...
+}
+
+// ... onLogin e onLogout iguais ...
+
+document.addEventListener('DOMContentLoaded', () => {
+    
+    setupAuthListeners(onLogin, onLogout);
+    initDragAndDrop(); 
+
+    // ... window.app igual ...
+
+    // NOVO: Listeners para os filtros do Dashboard
+    const filtroAno = document.getElementById('dashboard-filtro-ano');
+    const filtroMes = document.getElementById('dashboard-filtro-mes');
+
+    if (filtroAno) {
+        filtroAno.addEventListener('change', () => {
+            // Se o usuário selecionar "Geral" (todos), podemos desabilitar o mês ou resetar
+            // Mas por simplicidade, apenas atualizamos
+            ui.updateDashboard(dbState);
+        });
+    }
+
+    if (filtroMes) {
+        filtroMes.addEventListener('change', () => {
+            ui.updateDashboard(dbState);
+        });
+    }
+    
+    // ... Resto dos listeners iguais ...
+});
     
     document.getElementById('calendario-prev').addEventListener('click', () => { ui.mudarMes(-1, calendarioData, dbState); });
     document.getElementById('calendario-next').addEventListener('click', () => { ui.mudarMes(1, calendarioData, dbState); });
@@ -510,6 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('payment-date').valueAsDate = new Date();
     document.getElementById('custo-data').valueAsDate = new Date();
 });
+
 
 
 
