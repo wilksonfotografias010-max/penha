@@ -13,7 +13,7 @@ let userId = null;
 // Estrutura inicial do banco de dados local
 let dbState = { 
     eventos: [], clientes: [], contratos: [], fotografos: [], 
-    financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], configuracoes: []
+    financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], configuracoes: [], categorias: []
 };
 
 let unsubscribeListeners = []; 
@@ -23,10 +23,6 @@ let selectedEventIdForEntrega = null;
 
 
 /* [INICIO: MAIN_CORE_LOGIC] - Reação a Mudanças no Banco de Dados */
-/**
- * Função central que é chamada toda vez que o Firestore notifica uma mudança.
- * Ela orquestra a atualização da interface e verificações automáticas.
- */
 function onDataChange(newState) {
     dbState = newState; 
     
@@ -36,13 +32,12 @@ function onDataChange(newState) {
             .catch(err => console.error("Erro na automação de custos:", err));
     }
 
-    // 2. Prepara Filtros do Dashboard (Necessário antes de renderizar os gráficos)
+    // 2. Prepara Filtros e Selects Dinâmicos
     ui.populateDashboardYears(dbState);
+    ui.populateDynamicSelects(dbState); // Categorias nos selects
 
-    // 3. Atualiza o Dashboard (Lê os filtros aplicados)
+    // 3. Renderiza Interface
     ui.updateDashboard(dbState);
-
-    // 4. Renderiza Seções Principais
     ui.renderKanban(dbState);
     ui.renderClientes(dbState);
     ui.renderContratos(dbState);
@@ -50,52 +45,35 @@ function onDataChange(newState) {
     ui.renderFinanceiro(dbState);
     ui.renderCustos(dbState); 
     ui.renderCalendario(calendarioData, dbState);
+    ui.renderCategorias(dbState); // Lista de categorias na config
+    ui.renderTemplates(dbState);
+    ui.renderPacotes(dbState);
     
-    // 5. Popula Selects (Comboboxes)
+    // 4. Popula Selects Padrão
     ui.populateEventoClienteSelect(dbState);
     ui.populateEventoSelect(dbState);
     ui.populateCustoFotografoSelect(dbState);
     ui.populateContratoClienteSelect(dbState);
     ui.populateEntregaEventoSelect(dbState, selectedEventIdForEntrega);
     
-    // 6. Lógica Condicional de Seções Visíveis
-    
-    // Seção Entregas
+    // 5. Lógica de Seções Específicas
     if (selectedEventIdForEntrega) {
         const evento = dbState.eventos.find(e => e.id === selectedEventIdForEntrega);
         ui.renderEntregaCards(evento, dbState);
     } else {
         ui.renderEntregasAtrasadas(dbState);
     }
+    
     const entregaSection = document.getElementById('section-entrega');
     if (entregaSection && !entregaSection.classList.contains('hidden')) {
         ui.renderConfigPrazos(dbState);
     }
 
-    // Seção Financeiro (Gráficos precisam ser redesenhados se visíveis)
     const financeiroSection = document.getElementById('section-financeiro');
     if (financeiroSection && !financeiroSection.classList.contains('hidden')) {
         ui.renderContasAReceber(dbState);
         ui.renderFluxoDeCaixaChart(dbState);
     }
-
-    // Seção Configurações
-    ui.renderTemplates(dbState);
-    ui.renderPacotes(dbState);
-    // ... (dentro de onDataChange)
-    ui.renderTemplates(dbState);
-    ui.renderPacotes(dbState);
-
-    // 👇 COLOQUE ISTO AQUI 👇
-    // Atualiza Selects e Lista de Categorias
-    ui.populateDynamicSelects(dbState);
-    ui.renderCategorias(dbState);
-    // 👆 ------------------ 👆
-
-    // Ícones
-    if (window.lucide) window.lucide.createIcons();
-}
-/* [FIM: MAIN_CORE_LOGIC] */
 
     // Ícones
     if (window.lucide) window.lucide.createIcons();
@@ -111,7 +89,6 @@ function onLogin(user) {
     document.getElementById('app-container').classList.add('flex');
     document.getElementById('auth-status').innerText = user.email;
     
-    // Inicia os listeners do banco de dados
     unsubscribeListeners = store.setupRealtimeListeners(userId, onDataChange);
 }
 
@@ -122,10 +99,9 @@ function onLogout() {
     document.getElementById('app-container').classList.remove('flex');
     document.getElementById('auth-status').innerText = "Desconectado";
     
-    // Limpa listeners e estado
     unsubscribeListeners.forEach(unsub => unsub());
     unsubscribeListeners = [];
-    dbState = { eventos: [], clientes: [], contratos: [], fotografos: [], financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], configuracoes: [] };
+    dbState = { eventos: [], clientes: [], contratos: [], fotografos: [], financeiro: [], custos: [], colunas: [], templates: [], pacotes: [], configuracoes: [], categorias: [] };
     onDataChange(dbState); 
 }
 /* [FIM: MAIN_AUTH_CALLBACKS] */
@@ -137,12 +113,12 @@ document.addEventListener('DOMContentLoaded', () => {
     setupAuthListeners(onLogin, onLogout);
     initDragAndDrop(); 
     
-    /* [INICIO: MAIN_WINDOW_APP] - API Pública para o HTML */
+    /* [INICIO: MAIN_WINDOW_APP] - API Pública */
     window.app = {
-        // --- Navegação ---
+        // Navegação
         showSection: (sectionId) => ui.showSection(sectionId, dbState, calendarioData),
         
-        // --- Modais ---
+        // Modais
         openDossieModal: (contratoId) => ui.openDossieModal(contratoId, dbState),
         openDossieModalFromEvento: (eventoId) => {
             const contrato = dbState.contratos.find(c => c.eventoId === eventoId);
@@ -152,16 +128,14 @@ document.addEventListener('DOMContentLoaded', () => {
         closeDossieModal: ui.closeDossieModal,
         openAddPaymentModal: ui.openAddPaymentModal,
         openEditContratoModal: (contratoId) => ui.openEditContratoModal(contratoId, dbState),
-        
-        // Novas funções de Cliente
         openEditClienteModal: (clienteId) => ui.openEditClienteModal(clienteId, dbState),
         closeEditClienteModal: ui.closeEditClienteModal,
         
-        // --- Funcionalidades Específicas ---
+        // Funcionalidades
         abrirGerador: (contratoId) => ui.abrirGerador(contratoId, dbState),
         abrirNovoEventoDoCalendario: ui.abrirNovoEventoDoCalendario,
         
-        // --- Entregas e Prazos ---
+        // Entregas
         viewEntregaFromAtraso: (eventId) => {
             selectedEventIdForEntrega = eventId;
             ui.viewEntregaFromAtraso(eventId, dbState);
@@ -185,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
             store.saveConfigPrazos(userId, prazos).then(() => alert("Configurações salvas!")).catch(e => alert(e.message));
         },
 
-        // --- Configurações (Templates/Pacotes/Colunas) ---
+        // Configurações e Categorias
         editTemplate: (templateId) => {
             if (!templateId) return;
             const template = dbState.templates.find(t => t.id === templateId);
@@ -198,43 +172,27 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pacote) ui.populatePacoteForm(pacote);
         },
         clearPacoteForm: () => ui.clearPacoteForm(),
+        editCategoria: (id) => {
+            const cat = dbState.categorias.find(c => c.id === id);
+            if (cat) ui.populateCategoriaForm(cat);
+        },
+        clearCategoriaForm: () => ui.clearCategoriaForm(),
+        
+        // Colunas e Helpers
         editColumn: (columnId, currentName) => {
             const newName = prompt("Novo nome para a coluna:", currentName);
             if (newName && newName.trim() !== "" && newName !== currentName) {
                 store.updateColumn(userId, columnId, newName.trim()).catch(e => alert(e.message));
             }
         },
-        // ... (dentro de window.app)
-        editPacote: (pacoteId) => {
-            if (!pacoteId) return;
-            const pacote = dbState.pacotes.find(p => p.id === pacoteId);
-            if (pacote) ui.populatePacoteForm(pacote);
-        },
-        clearPacoteForm: () => ui.clearPacoteForm(),
-
-        // 👇 COLOQUE ISTO AQUI 👇
-        // --- Categorias ---
-        editCategoria: (id) => {
-            const cat = dbState.categorias.find(c => c.id === id);
-            if (cat) ui.populateCategoriaForm(cat);
-        },
-        clearCategoriaForm: () => ui.clearCategoriaForm(),
-        // 👆 ------------------ 👆
-
-        editColumn: (columnId, currentName) => {
-            // ...
-        
-        // --- Helpers ---
         getDbState: () => dbState,
         updatePackageSelect: ui.updatePackageSelect, 
-
-        // --- Drag & Drop ---
         updateEventoColuna: (eventoId, novaColunaId) => {
             if (!userId) return;
             store.updateEventoColuna(userId, eventoId, novaColunaId).catch(e => alert(e.message));
         },
 
-        // --- Custos e Recorrência ---
+        // Custos e Recorrência
         toggleRecorrencia: (custoId, deveRepetir) => {
             if (!userId) return;
             const msg = deveRepetir 
@@ -251,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
         
-        // --- Exclusão Genérica (Delete) ---
+        // Exclusão
         deleteItem: (collectionName, id) => {
             if (!userId) return;
             let message = `Tem certeza que deseja excluir este item?`;
@@ -265,18 +223,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else return;
             } 
             
-            if (collectionName === 'contratos') {
-                message += `\n\nATENÇÃO: Isso NÃO excluirá os pagamentos já feitos.`;
-            } else if (collectionName === 'custos') {
-                 message = `Excluir este custo?`;
-            }
+            if (collectionName === 'contratos') message += `\n\nATENÇÃO: Isso NÃO excluirá os pagamentos já feitos.`;
+            else if (collectionName === 'custos') message = `Excluir este custo?`;
 
             if (confirm(message)) {
                 store.deleteSingleItem(userId, collectionName, id).catch(e => alert(e.message)); 
             }
         },
 
-        // --- Exportação ---
         exportarCSV: () => {
             if (!dbState.eventos || dbState.eventos.length === 0) {
                 alert("Não há dados suficientes para exportar.");
@@ -287,18 +241,12 @@ document.addEventListener('DOMContentLoaded', () => {
             dbState.eventos.forEach(evento => {
                 const cliente = dbState.clientes.find(c => c.id === evento.clienteId) || {};
                 const contrato = dbState.contratos.find(c => c.eventoId === evento.id); 
-                
                 const valorTotal = contrato ? (parseFloat(contrato.valorTotal) || 0) : 0;
                 const totalPago = contrato 
-                    ? dbState.financeiro
-                        .filter(p => p.contratoId === contrato.id)
-                        .reduce((acc, p) => acc + (parseFloat(p.valor) || 0), 0)
+                    ? dbState.financeiro.filter(p => p.contratoId === contrato.id).reduce((acc, p) => acc + (parseFloat(p.valor) || 0), 0)
                     : 0;
-                
                 const restante = valorTotal - totalPago;
-                const totalCustos = dbState.custos
-                    .filter(c => c.eventoId === evento.id)
-                    .reduce((acc, c) => acc + (parseFloat(c.valor) || 0), 0);
+                const totalCustos = dbState.custos.filter(c => c.eventoId === evento.id).reduce((acc, c) => acc + (parseFloat(c.valor) || 0), 0);
                 const lucro = totalPago - totalCustos; 
                 const dataEvento = evento.data ? new Date(evento.data + 'T00:00:00').toLocaleDateString('pt-BR') : '';
                 const safeText = (text) => text ? text.replace(/;/g, " - ").replace(/(\r\n|\n|\r)/gm, " ") : "";
@@ -330,22 +278,18 @@ document.addEventListener('DOMContentLoaded', () => {
     
     initGeradorListeners(); 
 
-    // --- Filtros Dashboard ---
+    // Filtros Dashboard
     const filtroAno = document.getElementById('dashboard-filtro-ano');
     const filtroMes = document.getElementById('dashboard-filtro-mes');
-    if (filtroAno) {
-        filtroAno.addEventListener('change', () => ui.updateDashboard(dbState));
-    }
-    if (filtroMes) {
-        filtroMes.addEventListener('change', () => ui.updateDashboard(dbState));
-    }
+    if (filtroAno) filtroAno.addEventListener('change', () => ui.updateDashboard(dbState));
+    if (filtroMes) filtroMes.addEventListener('change', () => ui.updateDashboard(dbState));
 
-    // --- Navegação Calendário ---
+    // Navegação Calendário
     document.getElementById('calendario-prev').addEventListener('click', () => { ui.mudarMes(-1, calendarioData, dbState); });
     document.getElementById('calendario-next').addEventListener('click', () => { ui.mudarMes(1, calendarioData, dbState); });
     document.getElementById('mobile-menu-button').addEventListener('click', () => { document.getElementById('sidebar').classList.toggle('-translate-x-full'); });
 
-    // --- Configuração: Selects ---
+    // Selects Dinâmicos (OnChange)
     const templateTypeSelect = document.getElementById('template-link-tipo');
     if (templateTypeSelect) {
         templateTypeSelect.addEventListener('change', (e) => {
@@ -373,7 +317,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Formulários: CRIAÇÃO ---
+    // --- SUBMITS DE FORMULÁRIOS ---
+
+    // Pacotes
     const pacoteForm = document.getElementById('form-pacote');
     if (pacoteForm) {
         pacoteForm.addEventListener('submit', (e) => {
@@ -390,42 +336,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     package_name: e.target.elements['pacote-nome'].value,
                     package_value: parseFloat(e.target.elements['pacote-valor'].value)
                 };
-
-                store.savePacote(userId, data, pacoteId || null)
-                    .then(() => ui.clearPacoteForm())
-                    .catch(e => alert("Falha ao salvar pacote: " + e.message));
-            } catch (err) { alert("Erro: " + err.message); }
-        });
-    }
-    // ... (dentro dos listeners)
-    const pacoteForm = document.getElementById('form-pacote');
-    if (pacoteForm) {
-        // ... (código do pacoteForm) ...
+                store.savePacote(userId, data, pacoteId || null).then(() => ui.clearPacoteForm()).catch(e => alert("Falha ao salvar pacote: " + e.message));
             } catch (err) { alert("Erro: " + err.message); }
         });
     }
 
-    // 👇 COLOQUE ISTO AQUI 👇
-    // --- Formulário de Categorias ---
+    // Categorias (NOVO)
     const categoriaForm = document.getElementById('form-categoria');
     if (categoriaForm) {
         categoriaForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const id = document.getElementById('categoria-id').value;
             const nome = document.getElementById('categoria-nome').value;
-            
             if(!nome) return;
-
-            store.saveCategoria(userId, { nome }, id || null)
-                .then(() => ui.clearCategoriaForm())
-                .catch(err => alert(err.message));
+            store.saveCategoria(userId, { nome }, id || null).then(() => ui.clearCategoriaForm()).catch(err => alert(err.message));
         });
     }
-    // 👆 ------------------ 👆
 
-    const templateForm = document.getElementById('form-template');
-    // ...
-
+    // Templates
     const templateForm = document.getElementById('form-template');
     if (templateForm) {
         templateForm.addEventListener('submit', (e) => {
@@ -438,12 +366,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 link_tipo: e.target.elements['template-link-tipo'].value,
                 link_pacote: e.target.elements['template-link-pacote'].value
             };
-            store.saveTemplate(userId, data, templateId || null)
-                .then(() => ui.clearTemplateForm())
-                .catch(e => alert("Falha ao salvar template: " + e.message));
+            store.saveTemplate(userId, data, templateId || null).then(() => ui.clearTemplateForm()).catch(e => alert("Falha ao salvar template: " + e.message));
         });
     }
 
+    // Clientes
     document.getElementById('form-cliente').addEventListener('submit', (e) => {
         e.preventDefault();
         const data = {
@@ -456,6 +383,24 @@ document.addEventListener('DOMContentLoaded', () => {
         store.handleFormSubmit(userId, 'clientes', data).then(() => e.target.reset()).catch(e => alert(e.message));
     });
 
+    // Edição de Clientes
+    const formEditCliente = document.getElementById('form-edit-cliente');
+    if (formEditCliente) {
+        formEditCliente.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const clienteId = document.getElementById('edit-cliente-id').value;
+            const data = {
+                nome: document.getElementById('edit-cliente-nome').value,
+                telefone: document.getElementById('edit-cliente-telefone').value,
+                email: document.getElementById('edit-cliente-email').value,
+                documento: document.getElementById('edit-cliente-documento').value,
+                endereco: document.getElementById('edit-cliente-endereco').value
+            };
+            store.updateCliente(userId, clienteId, data).then(() => ui.closeEditClienteModal()).catch(err => alert(err.message));
+        });
+    }
+
+    // Eventos
     document.getElementById('form-evento').addEventListener('submit', (e) => {
         e.preventDefault();
         const colunasOrdenadas = [...dbState.colunas].sort((a, b) => a.ordem - b.ordem);
@@ -474,6 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
         store.handleFormSubmit(userId, 'eventos', data).then(() => e.target.reset()).catch(e => alert(e.message));
     });
 
+    // Contratos (Criação)
     document.getElementById('form-contrato').addEventListener('submit', (e) => {
         e.preventDefault();
         const data = {
@@ -491,54 +437,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ui.updateContratoEventoSelect(null, dbState);
         }).catch(e => alert(e.message));
     });
-    
-    document.getElementById('form-fotografo').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const data = { nome: e.target.elements['fotografo-nome'].value, contato: e.target.elements['fotografo-contato'].value };
-        store.handleFormSubmit(userId, 'fotografos', data).then(() => e.target.reset()).catch(e => alert(e.message));
-    });
-    
-    document.getElementById('form-custo').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const isRepeating = e.target.elements['custo-repetir'] ? e.target.elements['custo-repetir'].checked : false;
-        const data = {
-            data: e.target.elements['custo-data'].value,
-            descricao: e.target.elements['custo-descricao'].value, 
-            valor: parseFloat(e.target.elements['custo-valor'].value), 
-            eventoId: e.target.elements['custo-evento'].value,
-            fotografoId: e.target.elements['custo-fotografo'].value,
-            repetir: isRepeating,
-            status: 'Pago' // Assumimos que o registro manual é de um pagamento realizado
-        };
-        store.handleFormSubmit(userId, 'custos', data).then(() => {
-            e.target.reset();
-            document.getElementById('custo-data').valueAsDate = new Date();
-        }).catch(e => alert(e.message));
-    });
-    
-    document.getElementById('form-nova-coluna').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const nomeColuna = e.target.elements['coluna-nome'].value;
-        if (!nomeColuna) return;
-        const proximaOrdem = (dbState.colunas.length > 0) ? Math.max(...dbState.colunas.map(c => c.ordem)) + 1 : 0;
-        const data = { nome: nomeColuna, ordem: proximaOrdem };
-        store.handleFormSubmit(userId, 'colunas', data).then(() => e.target.reset()).catch(e => alert(e.message));
-    });
 
-    document.getElementById('add-payment-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const data = {
-            contratoId: e.target.elements['payment-contrato-id'].value,
-            valor: parseFloat(e.target.elements['payment-amount'].value),
-            data: e.target.elements['payment-date'].value,
-            metodo: e.target.elements['payment-method'].value
-        };
-        store.handleFormSubmit(userId, 'financeiro', data).then(() => ui.closeAddPaymentModal()).catch(e => alert(e.message));
-    });
-    
-    // --- Formulários: EDIÇÃO ---
-    
-    // Edição de Contrato (com valor e histórico)
+    // Contratos (Edição)
     document.getElementById('edit-contract-form').addEventListener('submit', (e) => {
         e.preventDefault();
         const contratoId = e.target.elements['edit-contrato-id'].value;
@@ -551,32 +451,63 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         store.updateContrato(userId, contratoId, dataToUpdate).then(() => ui.closeEditContratoModal()).catch(e => alert(e.message));
     });
-
-    // Edição de Cliente
-    const formEditCliente = document.getElementById('form-edit-cliente');
-    if (formEditCliente) {
-        formEditCliente.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const clienteId = document.getElementById('edit-cliente-id').value;
-            const data = {
-                nome: document.getElementById('edit-cliente-nome').value,
-                telefone: document.getElementById('edit-cliente-telefone').value,
-                email: document.getElementById('edit-cliente-email').value,
-                documento: document.getElementById('edit-cliente-documento').value,
-                endereco: document.getElementById('edit-cliente-endereco').value
-            };
-            store.updateCliente(userId, clienteId, data).then(() => ui.closeEditClienteModal()).catch(err => alert(err.message));
-        });
-    }
     
+    // Fotógrafos
+    document.getElementById('form-fotografo').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const data = { nome: e.target.elements['fotografo-nome'].value, contato: e.target.elements['fotografo-contato'].value };
+        store.handleFormSubmit(userId, 'fotografos', data).then(() => e.target.reset()).catch(e => alert(e.message));
+    });
+    
+    // Custos
+    document.getElementById('form-custo').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const isRepeating = e.target.elements['custo-repetir'] ? e.target.elements['custo-repetir'].checked : false;
+        const data = {
+            data: e.target.elements['custo-data'].value,
+            descricao: e.target.elements['custo-descricao'].value, 
+            valor: parseFloat(e.target.elements['custo-valor'].value), 
+            eventoId: e.target.elements['custo-evento'].value,
+            fotografoId: e.target.elements['custo-fotografo'].value,
+            repetir: isRepeating,
+            status: 'Pago' 
+        };
+        store.handleFormSubmit(userId, 'custos', data).then(() => {
+            e.target.reset();
+            document.getElementById('custo-data').valueAsDate = new Date();
+        }).catch(e => alert(e.message));
+    });
+    
+    // Colunas
+    document.getElementById('form-nova-coluna').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const nomeColuna = e.target.elements['coluna-nome'].value;
+        if (!nomeColuna) return;
+        const proximaOrdem = (dbState.colunas.length > 0) ? Math.max(...dbState.colunas.map(c => c.ordem)) + 1 : 0;
+        const data = { nome: nomeColuna, ordem: proximaOrdem };
+        store.handleFormSubmit(userId, 'colunas', data).then(() => e.target.reset()).catch(e => alert(e.message));
+    });
+
+    // Pagamentos
+    document.getElementById('add-payment-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const data = {
+            contratoId: e.target.elements['payment-contrato-id'].value,
+            valor: parseFloat(e.target.elements['payment-amount'].value),
+            data: e.target.elements['payment-date'].value,
+            metodo: e.target.elements['payment-method'].value
+        };
+        store.handleFormSubmit(userId, 'financeiro', data).then(() => ui.closeAddPaymentModal()).catch(e => alert(e.message));
+    });
+    
+    // Botões de Cancelar Modal
     document.getElementById('cancel-payment-button').addEventListener('click', ui.closeAddPaymentModal);
     document.getElementById('cancel-edit-contract-button').addEventListener('click', ui.closeEditContratoModal);
 
-    // Inicialização de datas nos forms
+    // Datas Iniciais
     document.getElementById('contrato-data').valueAsDate = new Date();
     document.getElementById('payment-date').valueAsDate = new Date();
     document.getElementById('custo-data').valueAsDate = new Date();
     /* [FIM: MAIN_LISTENERS] */
 });
 /* [FIM: MAIN_INIT] */
-
