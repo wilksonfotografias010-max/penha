@@ -1001,7 +1001,44 @@ export function populateDynamicSelects(dbState) {
 }
 /* [FIM: UI_CONFIG_CATEGORIAS] */
 
+/* [INICIO: UI_CONFIG_VENDEDORES] - Gestão de Vendedores */
+export function renderVendedores(dbState) {
+    const lista = document.getElementById('lista-vendedores');
+    if (!lista) return;
 
+    if (!dbState.vendedores || dbState.vendedores.length === 0) { 
+        lista.innerHTML = '<p class="text-gray-500 text-center py-4 text-sm">Nenhum vendedor cadastrado.</p>'; 
+        return; 
+    }
+
+    lista.innerHTML = dbState.vendedores.map(vend => `
+        <div class="flex justify-between items-center bg-gray-50 p-2 mb-2 rounded border border-gray-200">
+            <span class="font-medium text-gray-700 text-sm">${vend.nome}</span>
+            <div class="flex gap-2">
+                <button onclick="window.app.editVendedor('${vend.id}')" class="text-blue-500 hover:text-blue-700" title="Editar">
+                    <i data-lucide="edit-2" class="w-4 h-4"></i>
+                </button>
+                <button onclick="window.app.deleteItem('vendedores', '${vend.id}')" class="text-red-500 hover:text-red-700" title="Excluir">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+    
+    if (window.lucide) window.lucide.createIcons();
+}
+
+export function populateVendedorForm(vendedor) {
+    document.getElementById('vendedor-id').value = vendedor.id;
+    document.getElementById('vendedor-nome').value = vendedor.nome || '';
+}
+
+export function clearVendedorForm() {
+    const form = document.getElementById('form-vendedor');
+    if(form) form.reset();
+    document.getElementById('vendedor-id').value = "";
+}
+/* [FIM: UI_CONFIG_VENDEDORES] */
 /* [INICIO: UI_DELIVERY_LOGIC] */
 export function renderConfigPrazos(dbState) {
     const section = document.getElementById('section-entrega');
