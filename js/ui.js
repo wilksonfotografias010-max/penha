@@ -413,7 +413,113 @@ export function renderCustos(dbState) {
 }
 /* [FIM: UI_RENDER_CUSTOS] */
 
+/* [INICIO: UI_RENDER_RELATORIOS] */
+export function populateRelatorioYears(dbState) {
+    const select = document.getElementById('relatorio-ano');
+    if (!select) return;
+    const anos = new Set();
+    const add = (d) => { if(d) anos.add(new Date(d + 'T00:00:00').getFullYear()); };
+    
+    dbState.financeiro.forEach(i => add(i.data));
+    dbState.custos.forEach(i => add(i.data));
+    anos.add(new Date().getFullYear());
 
+    const valorAtual = select.value;
+    select.innerHTML = '';
+    
+    Array.from(anos).sort((a,b) => b-a).forEach(ano => {
+        const opt = document.createElement('option');
+        opt.value = ano;
+        opt.textContent = ano;
+        select.appendChild(opt);
+    });
+
+    if (valorAtual && anos.has(parseInt(valorAtual))) select.value = valorAtual;
+    else select.value = new Date().getFullYear();
+}
+
+export function renderRelatorioBalanco(dbState) {
+    const elAno = document.getElementById('relatorio-ano');
+    const elMes = document.getElementById('relatorio-mes');
+    if (!elAno || !elMes) return;
+
+    const ano = parseInt(elAno.value);
+    const mes = parseInt(elMes.value); // 0 a 11
+
+    // Filtra Entradas (Financeiro)
+    const entradas = dbState.financeiro.filter(item => {
+        if (!item.data) return false;
+        const d = new Date(item.data + 'T00:00:00');
+        return d.getFullYear() === ano && d.getMonth() === mes;
+    }).sort((a,b) => new Date(a.data) - new Date(b.data));
+
+    // Filtra Saídas (Custos)
+    const saidas = dbState.custos.filter(item => {
+        if (!item.data) return false;
+        const d = new Date(item.data + 'T00:00:00');
+        return d.getFullYear() === ano && d.getMonth() === mes;
+    }).sort((a,b) => new Date(a.data) - new Date(b.data));
+
+    // Totais
+    const totalEntradas = entradas.reduce((acc, i) => acc + (parseFloat(i.valor)||0), 0);
+    const totalSaidas = saidas.reduce((acc, i) => acc + (parseFloat(i.valor)||0), 0);
+    const saldo = totalEntradas - totalSaidas;
+
+    // Renderiza Totais
+    safeSetText('relatorio-total-receitas', `R$ ${totalEntradas.toFixed(2).replace('.', ',')}`);
+    safeSetText('relatorio-total-despesas', `R$ ${totalSaidas.toFixed(2).replace('.', ',')}`);
+    const elSaldo = document.getElementById('relatorio-saldo');
+    if(elSaldo) {
+        elSaldo.innerText = `R$ ${saldo.toFixed(2).replace('.', ',')}`;
+        elSaldo.classList.remove('text-green-600', 'text-red-600', 'text-gray-800');
+        if(saldo > 0) elSaldo.classList.add('text-green-600');
+        else if(saldo < 0) elSaldo.classList.add('text-red-600');
+        else elSaldo.classList.add('text-gray-800');
+    }
+
+    // Renderiza Tabelas
+    const tbodyEntradas = document.getElementById('relatorio-lista-entradas');
+    if (entradas.length === 0) {
+        tbodyEntradas.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">Nenhuma entrada neste mês.</td></tr>';
+    } else {
+        tbodyEntradas.innerHTML = entradas.map(item => {
+            const dia = new Date(item.data + 'T00:00:00').getDate();
+            const cliente = dbState.clientes.find(c => {
+                const contrato = dbState.contratos.find(ct => ct.id === item.contratoId);
+                return contrato && contrato.clienteId === c.id;
+            });
+            const nome = cliente ? cliente.nome : 'Pagamento Avulso';
+            return `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3 text-gray-600">${dia}</td>
+                    <td class="p-3 font-medium">${nome} <span class="text-xs text-gray-400">(${item.metodo})</span></td>
+                    <td class="p-3 text-right text-green-600 font-bold">R$ ${parseFloat(item.valor).toFixed(2).replace('.', ',')}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    const tbodySaidas = document.getElementById('relatorio-lista-saidas');
+    if (saidas.length === 0) {
+        tbodySaidas.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">Nenhuma despesa neste mês.</td></tr>';
+    } else {
+        tbodySaidas.innerHTML = saidas.map(item => {
+            const dia = new Date(item.data + 'T00:00:00').getDate();
+            const isPendente = item.status === 'Pendente';
+            const classeValor = isPendente ? 'text-yellow-600' : 'text-red-600';
+            const iconStatus = isPendente ? '<i data-lucide="clock" class="w-3 h-3 inline"></i>' : '';
+            return `
+                <tr class="border-b hover:bg-gray-50 ${isPendente ? 'bg-yellow-50' : ''}">
+                    <td class="p-3 text-gray-600">${dia}</td>
+                    <td class="p-3 font-medium">${item.descricao} ${iconStatus}</td>
+                    <td class="p-3 text-right ${classeValor} font-bold">R$ ${parseFloat(item.valor).toFixed(2).replace('.', ',')}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+    if (window.lucide) window.lucide.createIcons();
+}
+/* [FIM: UI_RENDER_RELATORIOS] */
 /* [INICIO: UI_RENDER_CONTAS_RECEBER] */
 export function renderContasAReceber(dbState) {
     const lista = document.getElementById('lista-contas-a-receber');
