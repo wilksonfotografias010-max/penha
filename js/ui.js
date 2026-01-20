@@ -50,11 +50,9 @@ export function populateDashboardYears(dbState) {
     const select = document.getElementById('dashboard-filtro-ano');
     if (!select) return;
 
-    // Salva seleção atual
     const valorSelecionadoAnteriormente = select.value;
     const anosEncontrados = new Set();
 
-    // Helper para extrair ano
     const extrairAno = (dataStr) => {
         if (!dataStr || dataStr.length < 4) return;
         const ano = parseInt(dataStr.substring(0, 4)); 
@@ -63,7 +61,6 @@ export function populateDashboardYears(dbState) {
         }
     };
 
-    // Varre dados
     if (dbState.eventos) dbState.eventos.forEach(e => extrairAno(e.data));
     if (dbState.financeiro) dbState.financeiro.forEach(f => extrairAno(f.data));
     if (dbState.custos) dbState.custos.forEach(c => extrairAno(c.data));
@@ -73,7 +70,6 @@ export function populateDashboardYears(dbState) {
         });
     }
 
-    // Renderiza
     select.innerHTML = '<option value="todos">Todo o Período (Geral)</option>';
     const anosOrdenados = Array.from(anosEncontrados).sort((a, b) => b - a);
 
@@ -84,7 +80,6 @@ export function populateDashboardYears(dbState) {
         select.appendChild(option);
     });
 
-    // Restaura seleção
     if (valorSelecionadoAnteriormente && (valorSelecionadoAnteriormente === 'todos' || anosEncontrados.has(parseInt(valorSelecionadoAnteriormente)))) {
         select.value = valorSelecionadoAnteriormente;
     }
@@ -109,7 +104,6 @@ export function updateDashboard(dbState) {
         return true;
     };
 
-    // Filtros
     const financeiroFiltrado = dbState.financeiro.filter(item => estaNoPeriodo(item.data));
     const custosFiltrados = dbState.custos.filter(item => estaNoPeriodo(item.data));
     const contratosFiltrados = dbState.contratos.filter(contrato => {
@@ -122,7 +116,6 @@ export function updateDashboard(dbState) {
         return estaNoPeriodo(dataRef);
     });
 
-    // Cálculos
     const totalPago = financeiroFiltrado.reduce((acc, item) => acc + (parseFloat(item.valor) || 0), 0);
     const totalCustos = custosFiltrados.reduce((acc, item) => acc + (parseFloat(item.valor) || 0), 0);
     const totalContratado = contratosFiltrados.reduce((acc, c) => acc + (parseFloat(c.valorTotal) || 0), 0);
@@ -135,7 +128,6 @@ export function updateDashboard(dbState) {
     });
     const totalPendente = totalContratado - totalPagoDosContratosFiltrados;
 
-    // Atualiza DOM
     safeSetText('total-pendente', `R$ ${totalPendente.toFixed(2).replace('.', ',')}`);
     safeSetText('db-contratos-mes', `R$ ${totalContratado.toFixed(2).replace('.', ',')}`);
     
@@ -152,7 +144,6 @@ export function updateDashboard(dbState) {
         lucroEl.classList.toggle('text-gray-800', lucroLiquido >= 0);
     }
 
-    // Listas do Dashboard (Futuro/Recente)
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 
@@ -166,7 +157,6 @@ export function updateDashboard(dbState) {
     });
     safeSetText('db-entregas-criticas', entregasCriticasCount);
 
-    // Próximos Eventos
     const eventosFuturos = dbState.eventos
         .filter(evento => evento.data && new Date(evento.data + 'T00:00:00') >= hoje)
         .sort((a, b) => new Date(a.data) - new Date(b.data))
@@ -179,7 +169,6 @@ export function updateDashboard(dbState) {
     }).join('');
     safeSetHTML('dashboard-proximos-eventos', htmlFuturos);
 
-    // Últimos Eventos
     const eventosPassados = dbState.eventos
         .filter(evento => evento.data && new Date(evento.data + 'T00:00:00') < hoje)
         .sort((a, b) => new Date(b.data) - new Date(a.data))
@@ -281,6 +270,7 @@ export function renderClientes(dbState) {
                 </td>
             </tr>`;
         }).join('');
+    if (window.lucide) window.lucide.createIcons();
 }
 /* [FIM: UI_RENDER_CLIENTES] */
 
@@ -798,6 +788,8 @@ export function updatePackageSelect(selectElementId, categoryId, dbState) {
     });
 }
 /* [FIM: UI_CONFIG_PACKAGES] */
+
+
 /* [INICIO: UI_CONFIG_CATEGORIAS] - Gestão de Categorias */
 export function renderCategorias(dbState) {
     const lista = document.getElementById('lista-categorias');
@@ -850,14 +842,12 @@ export function populateDynamicSelects(dbState) {
         const select = document.getElementById(id);
         if (!select) return;
 
-        const valorAtual = select.value; // Tenta manter a seleção atual se possível
+        const valorAtual = select.value; 
 
-        // Mantém a primeira opção (geralmente "Selecione...") e limpa o resto
         const primeiraOpcao = select.options[0];
         select.innerHTML = '';
         if (primeiraOpcao) select.appendChild(primeiraOpcao);
 
-        // Se for o template, adiciona a opção "Geral" fixa
         if (id === 'template-link-tipo') {
             const optGeral = document.createElement('option');
             optGeral.value = 'geral';
@@ -865,22 +855,20 @@ export function populateDynamicSelects(dbState) {
             select.appendChild(optGeral);
         }
 
-        // Adiciona as categorias dinâmicas
-        dbState.categorias.forEach(cat => {
-            const option = document.createElement('option');
-            // Usamos o ID ou o Nome como valor? 
-            // Para manter compatibilidade com o que já existe (que usava strings como 'Casamento'),
-            // vamos usar o Nome da categoria como valor.
-            option.value = cat.nome; 
-            option.textContent = cat.nome;
-            select.appendChild(option);
-        });
+        if (dbState.categorias) {
+            dbState.categorias.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.nome; 
+                option.textContent = cat.nome;
+                select.appendChild(option);
+            });
+        }
 
-        // Restaura valor selecionado se ainda existir
         if (valorAtual) select.value = valorAtual;
     });
 }
 /* [FIM: UI_CONFIG_CATEGORIAS] */
+
 
 /* [INICIO: UI_DELIVERY_LOGIC] */
 export function renderConfigPrazos(dbState) {
