@@ -174,7 +174,7 @@ export async function updateCliente(userId, clienteId, data) {
 /* [FIM: STORE_CONTRACTS] */
 
 
-/* [INICIO: STORE_CONFIG] - Templates, Pacotes e Categorias */
+/* [INICIO: STORE_CONFIG] - Templates, Pacotes, Categorias e Vendedores */
 export async function saveTemplate(userId, templateData, templateId) {
     if (!userId) throw new Error("Usuário não autenticado.");
     if (templateId) {
@@ -199,6 +199,16 @@ export async function saveCategoria(userId, categoriaData, categoriaId) {
         await updateDoc(doc(db, `users/${userId}/categorias/${categoriaId}`), categoriaData); 
     } else { 
         await addDoc(collection(db, `users/${userId}/categorias`), categoriaData); 
+    }
+}
+
+// ADICIONADO: Função para salvar Vendedor
+export async function saveVendedor(userId, vendedorData, vendedorId) {
+    if (!userId) throw new Error("Usuário não autenticado.");
+    if (vendedorId) { 
+        await updateDoc(doc(db, `users/${userId}/vendedores/${vendedorId}`), vendedorData); 
+    } else { 
+        await addDoc(collection(db, `users/${userId}/vendedores`), vendedorData); 
     }
 }
 /* [FIM: STORE_CONFIG] */
@@ -320,4 +330,5 @@ export async function deleteClientAndRelations(userId, clienteId) {
     await batch.commit();
 }
 /* [FIM: STORE_COMPLEX_DELETE] */
+
 
