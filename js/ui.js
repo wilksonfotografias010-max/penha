@@ -282,6 +282,8 @@ export function renderKanban(dbState) {
     if (window.lucide) window.lucide.createIcons();
 }
 
+// Em js/ui.js
+
 export function renderClientes(dbState) {
     const lista = document.getElementById('lista-clientes');
     lista.innerHTML = dbState.clientes.length === 0 
@@ -294,9 +296,38 @@ export function renderClientes(dbState) {
                 <td class="p-4">${cliente.telefone || '---'}</td>
                 <td class="p-4">${cliente.email || '---'}</td>
                 <td class="p-4 text-sm">${cliente.endereco || '---'}</td>
-                <td class="p-4"><button onclick="window.app.deleteItem('clientes', '${cliente.id}')" class="text-red-500 hover:text-red-700"><i data-lucide="trash-2" class="w-5 h-5"></i></button></td>
+                <td class="p-4 flex gap-2">
+                    <button onclick="window.app.openEditClienteModal('${cliente.id}')" class="text-blue-500 hover:text-blue-700" title="Editar Cliente">
+                        <i data-lucide="edit-2" class="w-5 h-5"></i>
+                    </button>
+                    <button onclick="window.app.deleteItem('clientes', '${cliente.id}')" class="text-red-500 hover:text-red-700" title="Excluir Cliente">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </button>
+                </td>
             </tr>`;
         }).join('');
+    
+    if (window.lucide) window.lucide.createIcons();
+}
+
+// Adicione estas novas funções no js/ui.js (pode ser no final do arquivo)
+
+export function openEditClienteModal(clienteId, dbState) {
+    const cliente = dbState.clientes.find(c => c.id === clienteId);
+    if (!cliente) return;
+
+    document.getElementById('edit-cliente-id').value = cliente.id;
+    document.getElementById('edit-cliente-nome').value = cliente.nome || '';
+    document.getElementById('edit-cliente-telefone').value = cliente.telefone || '';
+    document.getElementById('edit-cliente-email').value = cliente.email || '';
+    document.getElementById('edit-cliente-documento').value = cliente.documento || '';
+    document.getElementById('edit-cliente-endereco').value = cliente.endereco || '';
+
+    document.getElementById('modal-edit-cliente').classList.remove('hidden');
+}
+
+export function closeEditClienteModal() {
+    document.getElementById('modal-edit-cliente').classList.add('hidden');
 }
 
 export function renderContratos(dbState) {
