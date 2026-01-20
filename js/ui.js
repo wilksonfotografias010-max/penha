@@ -419,45 +419,87 @@ export function populateRelatorioYears(dbState) {
     if (!select) return;
     const anos = new Set();
     const add = (d) => { if(d) anos.add(new Date(d + 'T00:00:00').getFullYear()); };
-    
     dbState.financeiro.forEach(i => add(i.data));
     dbState.custos.forEach(i => add(i.data));
     anos.add(new Date().getFullYear());
-
     const valorAtual = select.value;
     select.innerHTML = '';
-    
     Array.from(anos).sort((a,b) => b-a).forEach(ano => {
         const opt = document.createElement('option');
         opt.value = ano;
         opt.textContent = ano;
         select.appendChild(opt);
     });
-
     if (valorAtual && anos.has(parseInt(valorAtual))) select.value = valorAtual;
     else select.value = new Date().getFullYear();
+}
+
+// NOVO: Preenche o select de filtro de vendedores
+export function populateRelatorioVendedores(dbState) {
+    const select = document.getElementById('relatorio-vendedor');
+    if (!select) return;
+    const valorAtual = select.value;
+    
+    select.innerHTML = '<option value="todos">Geral (Todos)</option>';
+    
+    if (dbState.vendedores) {
+        dbState.vendedores.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.id;
+            opt.textContent = v.nome;
+            select.appendChild(opt);
+        });
+    }
+    
+    if (valorAtual) select.value = valorAtual;
 }
 
 export function renderRelatorioBalanco(dbState) {
     const elAno = document.getElementById('relatorio-ano');
     const elMes = document.getElementById('relatorio-mes');
+    const elVend = document.getElementById('relatorio-vendedor'); // Captura o filtro
+    
     if (!elAno || !elMes) return;
 
     const ano = parseInt(elAno.value);
-    const mes = parseInt(elMes.value); // 0 a 11
+    const mes = parseInt(elMes.value); 
+    const vendedorId = elVend ? elVend.value : 'todos';
+
+    // Helper para verificar se o item pertence ao vendedor selecionado
+    const checkVendedor = (tipo, item) => {
+        if (vendedorId === 'todos') return true; // Se for geral, aceita tudo
+
+        let eventoId = null;
+
+        if (tipo === 'entrada') {
+            // Entrada -> Contrato -> Evento -> Vendedor
+            const contrato = dbState.contratos.find(c => c.id === item.contratoId);
+            if (contrato) eventoId = contrato.eventoId;
+        } else {
+            // Saída -> Evento -> Vendedor
+            eventoId = item.eventoId;
+        }
+
+        if (!eventoId) return false; // Se não tem evento (ex: custo fixo), não pertence a vendedor específico
+        
+        const evento = dbState.eventos.find(e => e.id === eventoId);
+        return evento && evento.vendedorId === vendedorId;
+    };
 
     // Filtra Entradas (Financeiro)
     const entradas = dbState.financeiro.filter(item => {
         if (!item.data) return false;
         const d = new Date(item.data + 'T00:00:00');
-        return d.getFullYear() === ano && d.getMonth() === mes;
+        // Filtra por Data E por Vendedor
+        return d.getFullYear() === ano && d.getMonth() === mes && checkVendedor('entrada', item);
     }).sort((a,b) => new Date(a.data) - new Date(b.data));
 
     // Filtra Saídas (Custos)
     const saidas = dbState.custos.filter(item => {
         if (!item.data) return false;
         const d = new Date(item.data + 'T00:00:00');
-        return d.getFullYear() === ano && d.getMonth() === mes;
+        // Filtra por Data E por Vendedor
+        return d.getFullYear() === ano && d.getMonth() === mes && checkVendedor('saida', item);
     }).sort((a,b) => new Date(a.data) - new Date(b.data));
 
     // Totais
@@ -480,7 +522,7 @@ export function renderRelatorioBalanco(dbState) {
     // Renderiza Tabelas
     const tbodyEntradas = document.getElementById('relatorio-lista-entradas');
     if (entradas.length === 0) {
-        tbodyEntradas.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">Nenhuma entrada neste mês.</td></tr>';
+        tbodyEntradas.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">Nenhuma entrada encontrada.</td></tr>';
     } else {
         tbodyEntradas.innerHTML = entradas.map(item => {
             const dia = new Date(item.data + 'T00:00:00').getDate();
@@ -501,7 +543,7 @@ export function renderRelatorioBalanco(dbState) {
 
     const tbodySaidas = document.getElementById('relatorio-lista-saidas');
     if (saidas.length === 0) {
-        tbodySaidas.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">Nenhuma despesa neste mês.</td></tr>';
+        tbodySaidas.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">Nenhuma despesa encontrada.</td></tr>';
     } else {
         tbodySaidas.innerHTML = saidas.map(item => {
             const dia = new Date(item.data + 'T00:00:00').getDate();
