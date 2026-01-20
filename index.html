@@ -66,6 +66,11 @@
                 <button onclick="window.app.showSection('section-financeiro')" class="w-full flex items-center p-3 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">
                     <i data-lucide="dollar-sign" class="w-5 h-5 mr-3"></i> Financeiro
                 </button>
+                
+                <button onclick="window.app.showSection('section-relatorios')" class="w-full flex items-center p-3 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">
+                    <i data-lucide="file-bar-chart-2" class="w-5 h-5 mr-3"></i> Relatório / Balanço
+                </button>
+
                 <button onclick="window.app.showSection('section-calendario')" class="w-full flex items-center p-3 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">
                     <i data-lucide="calendar-days" class="w-5 h-5 mr-3"></i> Calendário
                 </button>
@@ -92,7 +97,7 @@
                     <div class="flex gap-2 bg-white p-2 rounded shadow-sm mt-2 md:mt-0">
                         <select id="dashboard-filtro-ano" class="p-2 border rounded text-sm bg-gray-50">
                             <option value="todos">Todo o Período (Geral)</option>
-                            </select>
+                        </select>
                         <select id="dashboard-filtro-mes" class="p-2 border rounded text-sm bg-gray-50">
                             <option value="todos">Todos os Meses</option>
                             <option value="0">Janeiro</option>
@@ -215,11 +220,9 @@
                         <input type="text" name="evento-nome" id="evento-nome" placeholder="Nome do Evento (ex: Casamento Maria e João)" class="p-2 border rounded" required>
                         <input type="date" name="evento-data" id="evento-data" class="p-2 border rounded" required>
                         <input type="text" name="evento-local" placeholder="Local do Evento" class="p-2 border rounded">
-                        
                         <select name="evento-tipo" id="evento-tipo" class="p-2 border rounded">
                             <option value="">Carregando categorias...</option>
                         </select>
-                        
                         <textarea name="evento-descricao" placeholder="Observações..." class="p-2 border rounded md:col-span-2"></textarea>
                         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition md:col-span-2">Agendar Evento</button>
                     </form>
@@ -227,7 +230,6 @@
             </div>
             <div id="section-contratos" class="content-section hidden">
                 <h1 class="text-2xl font-bold mb-6 text-gray-800">Contratos</h1>
-                
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                     <h2 class="text-lg font-semibold mb-4">Novo Contrato</h2>
                     <form id="form-contrato" class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -247,13 +249,11 @@
                         <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition md:col-span-3">Registrar Contrato</button>
                     </form>
                 </div>
-
                 <div class="bg-white rounded-lg shadow-md overflow-x-auto">
                     <div class="p-4 border-b bg-gray-50 flex items-center">
                         <i data-lucide="search" class="w-5 h-5 text-gray-400 mr-2"></i>
                         <input type="text" id="filtro-contrato-busca" placeholder="Buscar contrato por nome do cliente..." class="w-full bg-transparent border-none focus:ring-0 text-sm text-gray-700 outline-none">
                     </div>
-
                     <table class="w-full min-w-max">
                         <thead class="bg-gray-50">
                             <tr>
@@ -275,7 +275,6 @@
                     </button>
                     <h1 class="text-2xl font-bold text-gray-800">Gerador de Documentos</h1>
                 </div>
-
                 <div class="bg-white p-6 rounded-lg shadow-lg max-w-4xl mx-auto">
                     <div class="mb-6 border-b pb-4">
                         <label class="block text-gray-700 text-sm font-bold mb-2">Tipo de Contrato</label>
@@ -288,7 +287,6 @@
                             <option value="5">Apenas Preenchimento de Dados</option>
                         </select>
                     </div>
-
                     <form id="contractForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="md:col-span-2 bg-blue-50 p-4 rounded-lg">
                             <h3 class="font-bold text-blue-800 mb-3 flex items-center"><i data-lucide="calendar" class="w-4 h-4 mr-2"></i> Dados do Evento</h3>
@@ -299,7 +297,6 @@
                                 <div class="md:col-span-3"><label class="block text-gray-700 text-xs font-bold mb-1" for="eventLocal">Local do Evento</label><input class="w-full p-2 border rounded" id="eventLocal" type="text" placeholder="Endereço completo"></div>
                             </div>
                         </div>
-
                         <div class="md:col-span-2 bg-gray-50 p-4 rounded-lg">
                             <h3 class="font-bold text-gray-800 mb-3 flex items-center"><i data-lucide="user" class="w-4 h-4 mr-2"></i> Dados do Contratante</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -311,7 +308,6 @@
                                 <input class="w-full p-2 border rounded md:col-span-2" id="clientAddress" type="text" placeholder="Endereço Residencial">
                             </div>
                         </div>
-
                          <div id="studentDetails" class="hidden md:col-span-2 bg-purple-50 p-4 rounded-lg">
                             <h3 class="font-bold text-purple-800 mb-3">Dados do Formando</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -319,7 +315,6 @@
                                 <input class="w-full p-2 border rounded" id="studentClass" type="text" placeholder="Turma/Curso">
                             </div>
                         </div>
-
                         <div id="packageSection" class="md:col-span-2 border p-4 rounded-lg border-gray-200">
                              <label class="block text-gray-700 text-xs font-bold mb-2">Selecione o Pacote</label>
                              <select id="contractPackage" class="w-full p-2 border rounded bg-white mb-4">
@@ -330,7 +325,6 @@
                                  <div><label class="block text-gray-700 text-xs font-bold mb-1">Forma de Pagamento</label><input class="w-full p-2 border rounded" id="paymentMethod" type="text" placeholder="Ex: 30% entrada..."></div>
                              </div>
                         </div>
-
                         <div class="md:col-span-2 mt-4">
                              <div class="flex items-center mb-4">
                                 <input type="checkbox" id="imageRights" class="w-4 h-4 text-blue-600 rounded" checked>
@@ -345,32 +339,26 @@
             </div>
             <div id="section-financeiro" class="content-section hidden">
                 <h1 class="text-2xl font-bold mb-6 text-gray-800">Financeiro</h1>
-                
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-lg shadow-md">
                         <h2 class="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Contas a Receber (Pendentes)</h2>
                         <div class="overflow-y-auto max-h-64">
                             <table class="w-full text-sm">
-                                <thead class="text-left text-gray-500 bg-gray-50 sticky top-0">
-                                    <tr><th>Cliente</th><th>Evento</th><th>Falta</th><th>Ação</th></tr>
-                                </thead>
+                                <thead class="text-left text-gray-500 bg-gray-50 sticky top-0"><tr><th>Cliente</th><th>Evento</th><th>Falta</th><th>Ação</th></tr></thead>
                                 <tbody id="lista-contas-a-receber"></tbody>
                             </table>
                         </div>
                     </div>
-
                     <div class="bg-white p-6 rounded-lg shadow-md">
                          <h2 class="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Fluxo de Caixa (Últimos 12 Meses)</h2>
                          <div class="relative h-64"><canvas id="fluxo-caixa-chart"></canvas></div>
                     </div>
                 </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-white p-6 rounded-lg shadow-md">
                         <h2 class="text-lg font-semibold mb-4">Registrar Pagamento (Entrada)</h2>
                         <button onclick="window.app.openAddPaymentModal()" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">+ Novo Pagamento</button>
                     </div>
-                    
                     <div class="bg-white p-6 rounded-lg shadow-md">
                         <h2 class="text-lg font-semibold mb-4">Registrar Custo (Saída)</h2>
                         <form id="form-custo" class="space-y-3">
@@ -381,17 +369,14 @@
                                 <input type="number" name="custo-valor" placeholder="Valor" step="0.01" class="w-full p-2 border rounded text-sm" required>
                                 <input type="date" name="custo-data" id="custo-data" class="w-full p-2 border rounded text-sm" required>
                             </div>
-                            
                             <div class="flex items-center bg-gray-50 p-2 rounded border">
                                 <input type="checkbox" id="custo-repetir" name="custo-repetir" class="w-4 h-4 text-blue-600 rounded">
                                 <label for="custo-repetir" class="ml-2 text-sm text-gray-700 font-medium">Custo Fixo (Repetir todo mês)</label>
                             </div>
-
                             <button type="submit" class="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600 text-sm">Salvar Saída</button>
                         </form>
                     </div>
                 </div>
-
                 <div class="mt-8 bg-white rounded-lg shadow-md overflow-x-auto">
                     <h2 class="text-lg font-semibold p-4 border-b">Histórico de Entradas</h2>
                     <table class="w-full min-w-max">
@@ -401,22 +386,98 @@
                         <tbody id="lista-financeiro"></tbody>
                     </table>
                 </div>
-
                 <div class="mt-8 bg-white rounded-lg shadow-md overflow-x-auto">
                     <h2 class="text-lg font-semibold p-4 border-b">Histórico de Saídas (Custos)</h2>
                     <table class="w-full min-w-max">
                         <thead class="bg-gray-50">
-                            <tr>
-                                <th class="p-4 text-left">Data</th>
-                                <th class="p-4 text-left">Descrição</th>
-                                <th class="p-4 text-left">Evento</th>
-                                <th class="p-4 text-left">Valor</th>
-                                <th class="p-4 text-left">Status/Recorrência</th>
-                                <th class="p-4 text-left">Ações</th>
-                            </tr>
+                            <tr><th class="p-4 text-left">Data</th><th class="p-4 text-left">Descrição</th><th class="p-4 text-left">Evento</th><th class="p-4 text-left">Valor</th><th class="p-4 text-left">Status/Recorrência</th><th class="p-4 text-left">Ações</th></tr>
                         </thead>
                         <tbody id="lista-custos"></tbody>
                     </table>
+                </div>
+            </div>
+            <div id="section-relatorios" class="content-section hidden">
+                <h1 class="text-2xl font-bold mb-6 text-gray-800">Balanço Financeiro Detalhado</h1>
+                
+                <div class="bg-white p-4 rounded-lg shadow-md mb-6 flex flex-col md:flex-row gap-4 items-end">
+                    <div class="flex-1 w-full">
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Ano de Referência</label>
+                        <select id="relatorio-ano" class="w-full p-2 border rounded bg-gray-50">
+                            </select>
+                    </div>
+                    <div class="flex-1 w-full">
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Mês de Referência</label>
+                        <select id="relatorio-mes" class="w-full p-2 border rounded bg-gray-50">
+                            <option value="0">Janeiro</option>
+                            <option value="1">Fevereiro</option>
+                            <option value="2">Março</option>
+                            <option value="3">Abril</option>
+                            <option value="4">Maio</option>
+                            <option value="5">Junho</option>
+                            <option value="6">Julho</option>
+                            <option value="7">Agosto</option>
+                            <option value="8">Setembro</option>
+                            <option value="9">Outubro</option>
+                            <option value="10">Novembro</option>
+                            <option value="11">Dezembro</option>
+                        </select>
+                    </div>
+                    <button onclick="window.app.gerarRelatorio()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 w-full md:w-auto h-10 flex items-center justify-center">
+                        <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i> Atualizar Balanço
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded shadow-sm">
+                        <p class="text-sm text-green-700 font-bold">Total Receitas</p>
+                        <p class="text-2xl font-bold text-gray-800" id="relatorio-total-receitas">R$ 0,00</p>
+                    </div>
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded shadow-sm">
+                        <p class="text-sm text-red-700 font-bold">Total Despesas</p>
+                        <p class="text-2xl font-bold text-gray-800" id="relatorio-total-despesas">R$ 0,00</p>
+                    </div>
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded shadow-sm">
+                        <p class="text-sm text-blue-700 font-bold">Saldo do Período</p>
+                        <p class="text-2xl font-bold text-gray-800" id="relatorio-saldo">R$ 0,00</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white rounded-lg shadow-md border-t-4 border-green-500">
+                        <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
+                            <h3 class="font-bold text-gray-700 flex items-center"><i data-lucide="arrow-up-circle" class="text-green-500 w-5 h-5 mr-2"></i> Entradas (Recebido)</h3>
+                        </div>
+                        <div class="overflow-x-auto max-h-[500px] overflow-y-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-100 text-gray-600 sticky top-0">
+                                    <tr>
+                                        <th class="p-3 text-left">Dia</th>
+                                        <th class="p-3 text-left">Descrição/Cliente</th>
+                                        <th class="p-3 text-right">Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="relatorio-lista-entradas"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md border-t-4 border-red-500">
+                        <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
+                            <h3 class="font-bold text-gray-700 flex items-center"><i data-lucide="arrow-down-circle" class="text-red-500 w-5 h-5 mr-2"></i> Saídas (Custos)</h3>
+                        </div>
+                        <div class="overflow-x-auto max-h-[500px] overflow-y-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-100 text-gray-600 sticky top-0">
+                                    <tr>
+                                        <th class="p-3 text-left">Dia</th>
+                                        <th class="p-3 text-left">Descrição</th>
+                                        <th class="p-3 text-right">Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="relatorio-lista-saidas"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div id="section-calendario" class="content-section hidden">
@@ -427,7 +488,6 @@
                         <h2 id="calendario-mes-ano" class="text-xl font-bold capitalize">Mês Ano</h2>
                         <button id="calendario-next" class="p-2 hover:bg-gray-100 rounded"><i data-lucide="chevron-right"></i></button>
                     </div>
-                    
                     <div class="grid grid-cols-7 gap-1 text-center font-bold text-gray-500 mb-2">
                         <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
                     </div>
@@ -436,9 +496,7 @@
             </div>
             <div id="section-configuracoes" class="content-section hidden">
                 <h1 class="text-2xl font-bold mb-6 text-gray-800">Configurações do Sistema</h1>
-                
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    
                     <div>
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-xl font-semibold text-gray-700">Categorias</h2>
@@ -447,16 +505,12 @@
                         <div class="bg-white p-4 rounded-lg shadow-md mb-6 border-l-4 border-orange-500">
                             <form id="form-categoria" class="space-y-3">
                                 <input type="hidden" id="categoria-id">
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-600 mb-1">Nome da Categoria</label>
-                                    <input type="text" id="categoria-nome" class="w-full p-2 border rounded text-sm" placeholder="Ex: Casamento, 15 Anos" required>
-                                </div>
+                                <div><label class="block text-xs font-bold text-gray-600 mb-1">Nome da Categoria</label><input type="text" id="categoria-nome" class="w-full p-2 border rounded text-sm" placeholder="Ex: Casamento, 15 Anos" required></div>
                                 <button type="submit" class="w-full bg-orange-600 text-white py-2 rounded text-sm hover:bg-orange-700">Salvar Categoria</button>
                             </form>
                         </div>
                         <div id="lista-categorias" class="space-y-2 max-h-96 overflow-y-auto"></div>
                     </div>
-
                     <div>
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-xl font-semibold text-gray-700">Pacotes</h2>
@@ -465,24 +519,14 @@
                         <div class="bg-white p-4 rounded-lg shadow-md mb-6 border-l-4 border-blue-500">
                             <form id="form-pacote" class="space-y-3">
                                 <input type="hidden" id="pacote-id">
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-600 mb-1">Categoria</label>
-                                    <select id="pacote-tipo-vinculo" class="w-full p-2 border rounded text-sm" required><option value="">Carregando...</option></select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-600 mb-1">Nome do Pacote</label>
-                                    <input type="text" id="pacote-nome" class="w-full p-2 border rounded text-sm" placeholder="Ex: Pacote Ouro" required>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-600 mb-1">Valor (R$)</label>
-                                    <input type="number" id="pacote-valor" class="w-full p-2 border rounded text-sm" step="0.01" required>
-                                </div>
+                                <div><label class="block text-xs font-bold text-gray-600 mb-1">Categoria</label><select id="pacote-tipo-vinculo" class="w-full p-2 border rounded text-sm" required><option value="">Carregando...</option></select></div>
+                                <div><label class="block text-xs font-bold text-gray-600 mb-1">Nome do Pacote</label><input type="text" id="pacote-nome" class="w-full p-2 border rounded text-sm" placeholder="Ex: Pacote Ouro" required></div>
+                                <div><label class="block text-xs font-bold text-gray-600 mb-1">Valor (R$)</label><input type="number" id="pacote-valor" class="w-full p-2 border rounded text-sm" step="0.01" required></div>
                                 <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700">Salvar Pacote</button>
                             </form>
                         </div>
                         <div id="lista-pacotes" class="space-y-2 max-h-96 overflow-y-auto"></div>
                     </div>
-
                     <div>
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-xl font-semibold text-gray-700">Templates</h2>
@@ -493,14 +537,8 @@
                                 <input type="hidden" id="template-id">
                                 <input type="text" id="template-titulo" placeholder="Título do Template" class="w-full p-2 border rounded text-sm" required>
                                 <div class="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label class="block text-xs font-bold text-gray-600 mb-1">Vincular a Tipo</label>
-                                        <select id="template-link-tipo" class="w-full p-2 border rounded text-sm"><option value="geral">Geral</option></select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold text-gray-600 mb-1">Vincular a Pacote</label>
-                                        <select id="template-link-pacote" class="w-full p-2 border rounded text-sm"><option value="">Qualquer Pacote</option></select>
-                                    </div>
+                                    <div><label class="block text-xs font-bold text-gray-600 mb-1">Vincular a Tipo</label><select id="template-link-tipo" class="w-full p-2 border rounded text-sm"><option value="geral">Geral</option></select></div>
+                                    <div><label class="block text-xs font-bold text-gray-600 mb-1">Vincular a Pacote</label><select id="template-link-pacote" class="w-full p-2 border rounded text-sm"><option value="">Qualquer Pacote</option></select></div>
                                 </div>
                                 <div class="border rounded p-2 bg-gray-50 text-xs text-gray-500 mb-2">
                                     <p class="font-bold mb-1">Variáveis:</p>
@@ -523,7 +561,6 @@
                         <div id="lista-templates" class="space-y-2 max-h-96 overflow-y-auto"></div>
                     </div>
                 </div>
-                
                 <div class="mt-8 border-t pt-6">
                     <h2 class="text-xl font-semibold text-gray-700 mb-4">Cadastros Auxiliares</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -590,23 +627,11 @@
             <h2 class="text-xl font-bold mb-4">Editar Contrato & Valores</h2>
             <form id="edit-contract-form">
                 <input type="hidden" id="edit-contrato-id">
-                
-                <div class="mb-4">
-                    <label class="block text-sm font-bold text-gray-700">Valor Total (R$)</label>
-                    <input type="number" id="edit-contrato-valor" step="0.01" class="w-full p-2 border border-blue-300 rounded bg-blue-50 font-bold text-gray-800" required>
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Histórico / Motivo das Alterações</label>
-                    <textarea id="edit-contrato-historico" rows="4" class="w-full p-2 border rounded text-sm bg-gray-50" placeholder="Ex: Valor original R$ 2.000. Adicionado R$ 200 referente a álbum extra..."></textarea>
-                </div>
-
-                <div class="mb-4"><label class="block text-sm font-medium text-gray-700">Status</label>
-                    <select id="edit-contrato-status" class="w-full p-2 border rounded"><option value="Proposta">Proposta</option><option value="Enviado">Enviado</option><option value="Assinado">Assinado</option><option value="Concluído">Concluído</option><option value="Cancelado">Cancelado</option></select>
-                </div>
+                <div class="mb-4"><label class="block text-sm font-bold text-gray-700">Valor Total (R$)</label><input type="number" id="edit-contrato-valor" step="0.01" class="w-full p-2 border border-blue-300 rounded bg-blue-50 font-bold text-gray-800" required></div>
+                <div class="mb-4"><label class="block text-sm font-bold text-gray-700 mb-1">Histórico / Motivo das Alterações</label><textarea id="edit-contrato-historico" rows="4" class="w-full p-2 border rounded text-sm bg-gray-50" placeholder="Ex: Valor original R$ 2.000..."></textarea></div>
+                <div class="mb-4"><label class="block text-sm font-medium text-gray-700">Status</label><select id="edit-contrato-status" class="w-full p-2 border rounded"><option value="Proposta">Proposta</option><option value="Enviado">Enviado</option><option value="Assinado">Assinado</option><option value="Concluído">Concluído</option><option value="Cancelado">Cancelado</option></select></div>
                 <div class="mb-4"><label class="block text-sm font-medium text-gray-700">Link do Contrato (Drive)</label><input type="text" id="edit-contrato-link" class="w-full p-2 border rounded"></div>
                 <div class="mb-4"><label class="block text-sm font-medium text-gray-700">Forma Pagamento</label><input type="text" id="edit-contrato-forma-pagamento" class="w-full p-2 border rounded"></div>
-                
                 <div class="flex justify-end gap-2"><button type="button" id="cancel-edit-contract-button" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Salvar Alterações</button></div>
             </form>
         </div>
