@@ -124,7 +124,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.app = {
         // Navegação
         showSection: (sectionId) => ui.showSection(sectionId, dbState, calendarioData),
-        
+        // ... outras funções ...
+        openEditClienteModal: (clienteId) => ui.openEditClienteModal(clienteId, dbState),
+        closeEditClienteModal: ui.closeEditClienteModal,
         // Modais e Dossiê
         openDossieModal: (contratoId) => ui.openDossieModal(contratoId, dbState),
         openDossieModalFromEvento: (eventoId) => {
@@ -485,4 +487,5 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('payment-date').valueAsDate = new Date();
     document.getElementById('custo-data').valueAsDate = new Date();
 });
+
 
