@@ -66,11 +66,9 @@
                 <button onclick="window.app.showSection('section-financeiro')" class="w-full flex items-center p-3 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">
                     <i data-lucide="dollar-sign" class="w-5 h-5 mr-3"></i> Financeiro
                 </button>
-                
                 <button onclick="window.app.showSection('section-relatorios')" class="w-full flex items-center p-3 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">
                     <i data-lucide="file-bar-chart-2" class="w-5 h-5 mr-3"></i> Relatório / Balanço
                 </button>
-
                 <button onclick="window.app.showSection('section-calendario')" class="w-full flex items-center p-3 text-gray-600 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">
                     <i data-lucide="calendar-days" class="w-5 h-5 mr-3"></i> Calendário
                 </button>
@@ -217,11 +215,13 @@
                     <h2 class="text-lg font-semibold mb-4">Novo Evento</h2>
                     <form id="form-evento" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <select name="evento-cliente" id="evento-cliente" class="p-2 border rounded" required><option>Carregando clientes...</option></select>
-                        <input type="text" name="evento-nome" id="evento-nome" placeholder="Nome do Evento (ex: Casamento Maria e João)" class="p-2 border rounded" required>
-                        <input type="date" name="evento-data" id="evento-data" class="p-2 border rounded" required>
+                        
                         <select name="evento-vendedor" id="evento-vendedor" class="p-2 border rounded">
                             <option value="">Selecione o Vendedor...</option>
                         </select>
+
+                        <input type="text" name="evento-nome" id="evento-nome" placeholder="Nome do Evento (ex: Casamento Maria e João)" class="p-2 border rounded" required>
+                        <input type="date" name="evento-data" id="evento-data" class="p-2 border rounded" required>
                         <input type="text" name="evento-local" placeholder="Local do Evento" class="p-2 border rounded">
                         <select name="evento-tipo" id="evento-tipo" class="p-2 border rounded">
                             <option value="">Carregando categorias...</option>
@@ -393,7 +393,14 @@
                     <h2 class="text-lg font-semibold p-4 border-b">Histórico de Saídas (Custos)</h2>
                     <table class="w-full min-w-max">
                         <thead class="bg-gray-50">
-                            <tr><th class="p-4 text-left">Data</th><th class="p-4 text-left">Descrição</th><th class="p-4 text-left">Evento</th><th class="p-4 text-left">Valor</th><th class="p-4 text-left">Status/Recorrência</th><th class="p-4 text-left">Ações</th></tr>
+                            <tr>
+                                <th class="p-4 text-left">Data</th>
+                                <th class="p-4 text-left">Descrição</th>
+                                <th class="p-4 text-left">Evento</th>
+                                <th class="p-4 text-left">Valor</th>
+                                <th class="p-4 text-left">Status/Recorrência</th>
+                                <th class="p-4 text-left">Ações</th>
+                            </tr>
                         </thead>
                         <tbody id="lista-custos"></tbody>
                     </table>
@@ -499,7 +506,9 @@
             </div>
             <div id="section-configuracoes" class="content-section hidden">
                 <h1 class="text-2xl font-bold mb-6 text-gray-800">Configurações do Sistema</h1>
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                    
                     <div>
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-xl font-semibold text-gray-700">Categorias</h2>
@@ -514,6 +523,7 @@
                         </div>
                         <div id="lista-categorias" class="space-y-2 max-h-96 overflow-y-auto"></div>
                     </div>
+
                     <div>
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-xl font-semibold text-gray-700">Pacotes</h2>
@@ -530,6 +540,7 @@
                         </div>
                         <div id="lista-pacotes" class="space-y-2 max-h-96 overflow-y-auto"></div>
                     </div>
+
                     <div>
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-xl font-semibold text-gray-700">Templates</h2>
@@ -563,7 +574,27 @@
                         </div>
                         <div id="lista-templates" class="space-y-2 max-h-96 overflow-y-auto"></div>
                     </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-semibold text-gray-700">Vendedores</h2>
+                            <button onclick="window.app.clearVendedorForm()" class="text-sm text-blue-600 hover:underline">+ Novo</button>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg shadow-md mb-6 border-l-4 border-teal-500">
+                            <form id="form-vendedor" class="space-y-3">
+                                <input type="hidden" id="vendedor-id">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-600 mb-1">Nome do Vendedor</label>
+                                    <input type="text" id="vendedor-nome" class="w-full p-2 border rounded text-sm" placeholder="Ex: João Silva" required>
+                                </div>
+                                <button type="submit" class="w-full bg-teal-600 text-white py-2 rounded text-sm hover:bg-teal-700">Salvar Vendedor</button>
+                            </form>
+                        </div>
+                        <div id="lista-vendedores" class="space-y-2 max-h-96 overflow-y-auto"></div>
+                    </div>
+
                 </div>
+                
                 <div class="mt-8 border-t pt-6">
                     <h2 class="text-xl font-semibold text-gray-700 mb-4">Cadastros Auxiliares</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
