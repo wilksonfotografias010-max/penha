@@ -90,6 +90,27 @@ function onDataChange(newState) {
         ui.renderRelatorioBalanco(dbState);
     }
 
+    // [MIGRATION] Garantir Tipos de Entrega Padrão
+    if (userId && window.app && (!dbState.tipos_entrega || dbState.tipos_entrega.length === 0)) {
+        console.log("Detectado ausência de tipos de entrega. Iniciando migração...");
+        // Define flag para não rodar multiplas vezes em race condition
+        if (!window._migrationRunning) {
+            window._migrationRunning = true;
+            Promise.all([
+                store.saveTipoEntrega(userId, { id: 'previa', titulo: 'PRÉVIA', dias_padrao: 3, ordem: 1 }),
+                store.saveTipoEntrega(userId, { id: 'midia', titulo: 'FOTOS EM MÍDIA', dias_padrao: 60, ordem: 2 }),
+                store.saveTipoEntrega(userId, { id: 'album', titulo: 'ÁLBUM IMPRESSO', dias_padrao: 180, ordem: 3 })
+            ]).then(() => {
+                console.log("Migração de entregas concluída.");
+                ui.showToast("Tipos de entrega padrão criados com sucesso!", "success");
+                window._migrationRunning = false;
+            }).catch(err => {
+                console.error("Erro na migração:", err);
+                window._migrationRunning = false;
+            });
+        }
+    }
+
     // Ícones
     if (window.lucide) window.lucide.createIcons();
 }
@@ -204,7 +225,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const vend = dbState.vendedores.find(v => v.id === id);
             if (vend) ui.populateVendedorForm(vend);
         },
+        editVendedor: (id) => {
+            const vend = dbState.vendedores.find(v => v.id === id);
+            if (vend) ui.populateVendedorForm(vend);
+        },
         clearVendedorForm: () => ui.clearVendedorForm(),
+
+        // Tipos de Entrega
+        saveTipoEntrega: (id, data) => {
+            store.saveTipoEntrega(userId, data, id).then(() => {
+                ui.showToast('Tipo de entrega salvo!', 'success');
+                ui.clearTipoEntregaForm();
+            }).catch(e => ui.showToast(e.message, 'error'));
+        },
+        editTipoEntrega: (id) => {
+            const tipo = dbState.tipos_entrega.find(t => t.id === id);
+            if (tipo) ui.populateTipoEntregaForm(tipo);
+        },
+        clearTipoEntregaForm: () => ui.clearTipoEntregaForm(),
 
         // Colunas e Helpers
         editColumn: (columnId, currentName) => {
@@ -251,8 +289,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else return;
             }
 
-            if (collectionName === 'contratos') message += `\n\nATENÇÃO: Isso NÃO excluirá os pagamentos já feitos.`;
-            else if (collectionName === 'custos') message = `Excluir este custo?`;
+            if (collectionName === 'contratos') {
+                message = "⚠️ ATENÇÃO! ⚠️\n\nAo excluir este CONTRATO, o EVENTO associado também será excluído do calendário e do quadro. Deseja continuar?";
+                if (confirm(message)) {
+                    store.deleteContractAndRelations(userId, id)
+                        .then(() => ui.showToast('Contrato e Evento excluídos.', 'success'))
+                        .catch(e => ui.showToast(e.message, 'error'));
+                    return;
+                } else return;
+            }
+
+            if (collectionName === 'custos') message = `Excluir este custo?`;
 
             if (confirm(message)) {
                 store.deleteSingleItem(userId, collectionName, id).then(() => ui.showToast('Item excluído.', 'success')).catch(e => ui.showToast(e.message, 'error'));
@@ -264,7 +311,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 ui.showToast("Não há dados suficientes para exportar.", 'warning');
                 return;
             }
-            let csvContent = "Evento;Data do Evento;Cliente;Email;Telefone;Tipo;Local;Vendedor;Pacote/Contrato;Valor Contrato;Total Pago;Restante;Total Custos;Lucro Liquido;Status Previa;Status Midia;Status Album\n";
+
+            // Headers Dinâmicos
+            const tiposEntrega = dbState.tipos_entrega && dbState.tipos_entrega.length > 0
+                ? [...dbState.tipos_entrega].sort((a, b) => (a.ordem || 99) - (b.ordem || 99))
+                : [{ id: 'previa', titulo: 'Previa' }, { id: 'midia', titulo: 'Midia' }, { id: 'album', titulo: 'Album' }];
+
+            const headerEntregas = tiposEntrega.map(t => `Status ${t.titulo}`).join(';');
+            let csvContent = `Evento;Data do Evento;Cliente;Email;Telefone;Tipo;Local;Vendedor;Pacote/Contrato;Valor Contrato;Total Pago;Restante;Total Custos;Lucro Liquido;${headerEntregas}\n`;
 
             dbState.eventos.forEach(evento => {
                 const cliente = dbState.clientes.find(c => c.id === evento.clienteId) || {};
@@ -281,13 +335,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lucro = totalPago - totalCustos;
                 const dataEvento = evento.data ? new Date(evento.data + 'T00:00:00').toLocaleDateString('pt-BR') : '';
                 const safeText = (text) => text ? text.replace(/;/g, " - ").replace(/(\r\n|\n|\r)/gm, " ") : "";
+
+                // Colunas Dinâmicas de Entrega
+                const colunasEntregaArr = tiposEntrega.map(t => {
+                    const status = evento[`entrega_${t.id}_status`] || 'Pendente';
+                    return safeText(status);
+                });
                 const money = (val) => val.toFixed(2).replace('.', ',');
 
                 const row = [
                     safeText(evento.nome), dataEvento, safeText(cliente.nome), safeText(cliente.email), safeText(cliente.telefone),
                     safeText(evento.tipo), safeText(evento.local), safeText(nomeVendedor), contrato ? "Sim" : "Sem Contrato",
                     money(valorTotal), money(totalPago), money(restante), money(totalCustos), money(lucro),
-                    safeText(evento.entrega_previa_status), safeText(evento.entrega_midia_status), safeText(evento.entrega_album_status)
+                    ...colunasEntregaArr
                 ];
                 csvContent += row.join(";") + "\n";
             });

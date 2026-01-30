@@ -116,10 +116,13 @@ export function updateDashboard(dbState) {
     hoje.setHours(0, 0, 0, 0);
 
     let entregasCriticasCount = 0;
+    const tiposEntrega = dbState.tipos_entrega && dbState.tipos_entrega.length > 0
+        ? dbState.tipos_entrega
+        : [{ id: 'previa', titulo: 'PRÉVIA' }, { id: 'midia', titulo: 'MÍDIA' }, { id: 'album', titulo: 'ÁLBUM' }];
+
     dbState.eventos.forEach(evento => {
-        const tipos = ['previa', 'midia', 'album'];
-        tipos.forEach(tipo => {
-            const info = getEntregaInfo(evento, tipo);
+        tiposEntrega.forEach(tipo => {
+            const info = getEntregaInfo(evento, tipo, dbState);
             if (info.status === 'atrasado' || info.status === 'hoje') entregasCriticasCount++;
         });
     });
@@ -143,12 +146,15 @@ export function updateDashboard(dbState) {
         .slice(0, 5);
 
     let htmlPassados = eventosPassados.length === 0 ? '<p class="text-gray-500">Nenhum evento passado.</p>' : eventosPassados.map(evento => {
-        const infoMidia = getEntregaInfo(evento, 'midia');
-        const infoAlbum = getEntregaInfo(evento, 'album');
-        const midiaColor = infoMidia.status === 'entregue' ? 'text-green-600' : (infoMidia.status === 'atrasado' ? 'text-red-600' : 'text-blue-600');
-        const albumColor = infoAlbum.status === 'entregue' ? 'text-green-600' : (infoAlbum.status === 'atrasado' ? 'text-red-600' : 'text-blue-600');
+        // Dinamico: Mostra status de todas as entregas configuradas
+        const statusHtml = tiposEntrega.map(tipo => {
+            const info = getEntregaInfo(evento, tipo, dbState);
+            const color = info.status === 'entregue' ? 'text-green-600' : (info.status === 'atrasado' ? 'text-red-600' : 'text-blue-600');
+            return `<p><strong>${tipo.titulo}:</strong> <span class="font-medium ${color}">${info.text}</span></p>`;
+        }).join('');
+
         const dataFormatada = new Date(evento.data + 'T00:00:00').toLocaleDateString('pt-BR');
-        return `<div class="border-b border-gray-100 pb-3"><p class="font-semibold text-gray-800">${evento.nome} <span class="text-sm text-gray-500">(${dataFormatada})</span></p><div class="text-sm space-y-1 mt-1 pl-2"><p><strong>Mídia:</strong> <span class="font-medium ${midiaColor}">${infoMidia.text}</span></p><p><strong>Álbum:</strong> <span class="font-medium ${albumColor}">${infoAlbum.text}</span></p></div></div>`;
+        return `<div class="border-b border-gray-100 pb-3"><p class="font-semibold text-gray-800">${evento.nome} <span class="text-sm text-gray-500">(${dataFormatada})</span></p><div class="text-sm space-y-1 mt-1 pl-2">${statusHtml}</div></div>`;
     }).join('');
     safeSetHTML('dashboard-ultimos-eventos', htmlPassados);
 }

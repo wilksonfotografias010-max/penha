@@ -26,7 +26,8 @@ import {
 let dbState = {
     eventos: [], clientes: [], contratos: [], fotografos: [],
     financeiro: [], custos: [], colunas: [], templates: [], pacotes: [],
-    configuracoes: [], categorias: [], vendedores: [],
+    financeiro: [], custos: [], colunas: [], templates: [], pacotes: [],
+    configuracoes: [], categorias: [], vendedores: [], tipos_entrega: [],
     // Buffers para lógica de merge:
     _realtimeEventos: [], _historyEventos: [],
     _realtimeFinanceiro: [], _historyFinanceiro: [],
@@ -58,14 +59,14 @@ export function setupRealtimeListeners(userId, onDataChangeCallback) {
     dbState = {
         eventos: [], clientes: [], contratos: [], fotografos: [],
         financeiro: [], custos: [], colunas: [], templates: [], pacotes: [],
-        configuracoes: [], categorias: [], vendedores: [],
+        configuracoes: [], categorias: [], vendedores: [], tipos_entrega: [],
         _realtimeEventos: [], _historyEventos: [],
         _realtimeFinanceiro: [], _historyFinanceiro: [],
         _realtimeCustos: [], _historyCustos: []
     };
 
     // Coleções leves (Carrega tudo)
-    const smallCollections = ['clientes', 'fotografos', 'colunas', 'templates', 'pacotes', 'configuracoes', 'categorias', 'vendedores', 'contratos'];
+    const smallCollections = ['clientes', 'fotografos', 'colunas', 'templates', 'pacotes', 'configuracoes', 'categorias', 'vendedores', 'contratos', 'tipos_entrega'];
     let unsubscribeListeners = [];
 
     // 1. Listeners Simples (Coleções Pequenas)
@@ -79,6 +80,7 @@ export function setupRealtimeListeners(userId, onDataChangeCallback) {
             if (col === 'categorias') dbState.categorias.sort((a, b) => a.nome.localeCompare(b.nome));
             if (col === 'vendedores') dbState.vendedores.sort((a, b) => a.nome.localeCompare(b.nome));
             if (col === 'colunas') dbState.colunas.sort((a, b) => a.ordem - b.ordem);
+            if (col === 'tipos_entrega') dbState.tipos_entrega.sort((a, b) => (a.ordem || 99) - (b.ordem || 99));
             if (col === 'pacotes') {
                 dbState.pacotes.sort((a, b) => {
                     const catA = a.package_category_name || '';
@@ -383,6 +385,23 @@ export async function saveVendedor(userId, data, id = null) {
         if (id) await updateDoc(doc(db, `users/${userId}/vendedores/${id}`), data);
         else await addDoc(collection(db, `users/${userId}/vendedores`), data);
     } catch (error) { throw new Error("Falha ao salvar vendedor."); }
+}
+
+export async function saveTipoEntrega(userId, data, id = null) {
+    if (!userId) return;
+    try {
+        if (id) {
+            // Se for update
+            await updateDoc(doc(db, `users/${userId}/tipos_entrega/${id}`), data);
+        } else {
+            // Se for create, pode ser com ID manual (ex: migration) ou auto
+            if (data.id) {
+                await setDoc(doc(db, `users/${userId}/tipos_entrega/${data.id}`), data);
+            } else {
+                await addDoc(collection(db, `users/${userId}/tipos_entrega`), data);
+            }
+        }
+    } catch (error) { throw new Error("Falha ao salvar tipo de entrega."); }
 }
 
 export async function toggleCustoRecorrencia(userId, custoId, deveRepetir) {

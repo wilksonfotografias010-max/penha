@@ -20,6 +20,11 @@ export function renderCalendario(calendarioData, dbState) {
         const dataFormatada = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
         const eventosDoDia = dbState.eventos.filter(evento => {
             if (!evento.data) return false;
+
+            // FILTRO: Só mostra no calendário se tiver contrato vinculado
+            const temContrato = dbState.contratos.some(c => c.eventoId === evento.id);
+            if (!temContrato) return false;
+
             const dataEvento = new Date(evento.data + 'T00:00:00');
             return dataEvento.getTime() === dataAtual.getTime();
         });

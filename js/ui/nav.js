@@ -1,7 +1,7 @@
 import { renderRelatorioBalanco } from './finance.js';
 import { renderCalendario } from './calendar.js';
 import { renderContasAReceber, renderFluxoDeCaixaChart, renderFinanceiro, renderCustos } from './finance.js';
-import { renderEntregaCards, renderEntregasAtrasadas } from './delivery.js';
+import { renderEntregaCards, renderEntregasAtrasadas, renderConfigPrazos } from './delivery.js';
 
 export function showSection(sectionId, dbState, calendarioData) {
     document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
@@ -32,6 +32,8 @@ export function showSection(sectionId, dbState, calendarioData) {
             } else {
                 renderEntregasAtrasadas(dbState);
             }
+            // Garantir que o menu de configuração seja renderizado
+            renderConfigPrazos(dbState);
         }
     }
 }

@@ -189,3 +189,47 @@ export function updatePackageSelect(selectElementId, categoryId, dbState) {
         select.appendChild(option);
     });
 }
+
+export function renderTiposEntrega(dbState) {
+    const lista = document.getElementById('lista-tipos-entrega');
+    if (!lista) return;
+
+    if (!dbState.tipos_entrega || dbState.tipos_entrega.length === 0) {
+        lista.innerHTML = '<p class="text-gray-500 text-center py-4 text-sm">Nenhum tipo de entrega definido.</p>';
+        return;
+    }
+
+    // Ordenar (já vem ordenado do store, mas garantindo)
+    const tipos = [...dbState.tipos_entrega].sort((a, b) => (a.ordem || 99) - (b.ordem || 99));
+
+    lista.innerHTML = tipos.map(tipo => `
+        <div class="flex justify-between items-center bg-gray-50 p-2 mb-2 rounded border border-gray-200">
+            <div>
+                <span class="font-medium text-gray-700 text-sm block">${tipo.titulo}</span>
+                <span class="text-xs text-gray-500">Prazo Padrão: ${tipo.dias_padrao} dias</span>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="window.app.editTipoEntrega('${tipo.id}')" class="text-blue-500 hover:text-blue-700" title="Editar">
+                    <i data-lucide="edit-2" class="w-4 h-4"></i>
+                </button>
+                <button onclick="window.app.deleteItem('tipos_entrega', '${tipo.id}')" class="text-red-500 hover:text-red-700" title="Excluir" ${['previa', 'midia', 'album'].includes(tipo.id) ? 'disabled style="opacity:0.3;cursor:not-allowed"' : ''}>
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+
+    if (window.lucide) window.lucide.createIcons();
+}
+
+export function populateTipoEntregaForm(tipo) {
+    document.getElementById('tipo-entrega-id').value = tipo.id;
+    document.getElementById('tipo-entrega-titulo').value = tipo.titulo || '';
+    document.getElementById('tipo-entrega-dias').value = tipo.dias_padrao || 0;
+}
+
+export function clearTipoEntregaForm() {
+    const form = document.getElementById('form-tipo-entrega');
+    if (form) form.reset();
+    document.getElementById('tipo-entrega-id').value = "";
+}
