@@ -492,3 +492,27 @@ export async function verificarGerarCustosFixos(userId, dbState) {
     return Promise.resolve();
 }
 /* [FIM: STORE_SPECIFIC] */
+
+export async function deleteContractAndRelations(userId, contractId) {
+    if (!userId) return;
+
+    // Tenta encontrar o contrato no estado local
+    const contrato = dbState.contratos.find(c => c.id === contractId);
+
+    // Se não achou (pode estar desatualizado?), tenta buscar do firestore
+    // Mas para simplificar e garantir, se não achou, deleta só o ID.
+    if (!contrato) {
+        // Tenta deletar direto pelo ID (pode ser um contrato órfão ou estado desatualizado)
+        await deleteSingleItem(userId, 'contratos', contractId);
+        return;
+    }
+
+    const eventId = contrato.eventoId;
+    if (eventId) {
+        // Se tem evento vinculado, chama a exclusão do evento (que já deleta contratos em cascata)
+        await deleteEventAndRelations(userId, eventId);
+    } else {
+        // Se não tem evento, deleta apenas o contrato
+        await deleteSingleItem(userId, 'contratos', contractId);
+    }
+}
