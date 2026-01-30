@@ -33,6 +33,31 @@ export function openDossieModal(contratoId, dbState) {
     document.getElementById('dossie-total-pago').innerText = `R$ ${totalPago.toFixed(2).replace('.', ',')}`;
     document.getElementById('dossie-restante').innerText = `R$ ${restante.toFixed(2).replace('.', ',')}`;
     document.getElementById('dossie-restante').classList.toggle('text-red-600', restante > 0);
+
+    // --- Custos e Lucro ---
+    const custosEvento = dbState.custos.filter(c => c.eventoId === contrato.eventoId);
+    const listaCustos = document.getElementById('dossie-lista-custos');
+
+    if (listaCustos) {
+        listaCustos.innerHTML = custosEvento.length === 0
+            ? '<p class="text-gray-500">Nenhum custo registrado para este evento.</p>'
+            : custosEvento.map(c => `
+                <div class="flex justify-between border-b py-1 text-red-600">
+                    <span>${c.descricao} (${new Date(c.data + 'T00:00:00').toLocaleDateString('pt-BR')})</span>
+                    <span>- R$ ${parseFloat(c.valor).toFixed(2).replace('.', ',')}</span>
+                </div>`).join('');
+    }
+
+    const totalCustos = custosEvento.reduce((acc, c) => acc + parseFloat(c.valor), 0);
+    const lucro = totalPago - totalCustos;
+    const elLucro = document.getElementById('dossie-lucro-liquido');
+    if (elLucro) {
+        elLucro.innerText = `R$ ${lucro.toFixed(2).replace('.', ',')}`;
+        elLucro.classList.toggle('text-green-600', lucro >= 0);
+        elLucro.classList.toggle('text-red-600', lucro < 0);
+    }
+    // -----------------------
+
     document.getElementById('modal-dossie').classList.remove('hidden');
 }
 
