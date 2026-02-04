@@ -1,7 +1,7 @@
 /* [INICIO: MAIN_IMPORTS] - Importações de Módulos */
 import { setupAuthListeners } from './auth.js';
-import * as store from './store.js';
-import * as ui from './ui.js';
+import * as store from './store.js?v=2';
+import * as ui from './ui.js?v=2';
 import { initGeradorListeners } from './geradorContrato.js';
 import { initDragAndDrop } from './kanban.js';
 /* [FIM: MAIN_IMPORTS] */

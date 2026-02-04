@@ -6,7 +6,7 @@ export * from './ui/contracts.js';
 export * from './ui/forms.js';
 export * from './ui/settings.js';
 export * from './ui/delivery.js';
-export * from './ui/finance.js';
+export * from './ui/finance.js?v=2';
 export * from './ui/dashboard.js';
 export * from './ui/nav.js';
 export * from './ui/modals.js';

@@ -1,5 +1,5 @@
 /* [INICIO: STORE_IMPORTS] - Importações do Firebase */
-import { db } from './firebase.js';
+import { db } from './firebase.js?v=2';
 import {
     collection,
     addDoc,
