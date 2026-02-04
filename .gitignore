@@ -1,0 +1,5 @@
+node_modules/
+.env
+.gemini/
+.git/
+beta/node_modules/
