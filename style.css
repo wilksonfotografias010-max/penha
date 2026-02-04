@@ -1,0 +1,257 @@
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            /* Previne o "overscroll" que pode interferir no drag */
+            overscroll-behavior: none;
+        }
+        .sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+        .main-content {
+            transition: margin-left 0.3s ease-in-out;
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        .calendar-day {
+            padding: 8px;
+            background-color: #ffffff;
+            transition: background-color 0.2s;
+            position: relative;
+        }
+        .calendar-day.empty {
+            background-color: #f9fafb; /* Cinza claro para dias fora do mês */
+            color: #9ca3af;
+        }
+        .calendar-day.today {
+            background-color: #ebf8ff; /* Azul claro para hoje */
+        }
+        .calendar-day .day-number {
+            font-weight: 500;
+        }
+        .calendar-day.today .day-number {
+            color: #2b6cb0;
+            font-weight: 700;
+        }
+        .calendar-event {
+            font-size: 0.75rem; /* 12px */
+            padding: 2px 4px;
+            border-radius: 4px;
+            margin-top: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block; /* Garante que o evento ocupe a linha */
+        }
+        
+        #kanban-board {
+            display: flex;
+            gap: 16px;
+            padding-bottom: 16px; /* Espaço para a barra de rolagem horizontal */
+        }
+        .kanban-column {
+            min-width: 300px; /* Largura da coluna */
+            width: 300px;
+            background-color: #f3f4f6; /* Cinza de fundo */
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            max-height: 70vh; /* Altura máxima para colunas */
+        }
+        .kanban-column-title {
+            padding: 12px 16px;
+            font-weight: 600;
+            color: #1f2937;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .kanban-cards {
+            flex-grow: 1;
+            overflow-y: auto; /* Permite rolagem *dentro* da coluna */
+            padding: 12px;
+            min-height: 150px; /* Altura mínima para a área de drop */
+            space-y: 12px;
+            -webkit-overflow-scrolling: touch; /* Scroll suave em iOS */
+            touch-action: pan-y; /* Permite scroll vertical mas prioriza nosso drag horizontal */
+        }
+        .kanban-card {
+            cursor: grab;
+            transition: opacity 0.2s, transform 0.2s;
+            user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+        .kanban-card.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+        .kanban-cards.drag-over {
+            background-color: #ebf8ff; /* Azul claro */
+        }
+        
+        /* Estilos do Gerador de Contrato */
+        .form-input:focus {
+            ring: 2px;
+            ring-offset: 2px;
+        }
+        .tab-button {
+            transition: all 0.3s;
+        }
+        .tab-button.active {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        
+        /* Estilos para o Contrato Gerado */
+        #contractOutput {
+            font-family: 'Georgia', serif;
+            color: #333;
+            line-height: 1.6;
+            background-color: #fff;
+            padding: 2rem 2.5rem;
+            border: 1px solid #e2e8f0;
+        }
+        #contractOutput h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 2.5rem;
+            text-transform: uppercase;
+            color: #1a202c;
+            letter-spacing: 1px;
+        }
+        #contractOutput h2 {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #cbd5e0;
+            padding-bottom: 0.25rem;
+            color: #2d3748;
+        }
+        #contractOutput p {
+            margin-bottom: 1rem;
+            text-align: justify;
+        }
+        #contractOutput strong {
+            font-weight: 600;
+            color: #2d3748;
+        }
+        #contractOutput .signature-section {
+            margin-top: 4rem;
+            text-align: center;
+        }
+        #contractOutput .signature-line {
+            border-bottom: 1px solid #4a5568;
+            width: 300px;
+            margin: 0 auto 0.5rem auto;
+        }
+        #contractOutput .signature-name {
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        #contractOutput .signature-doc {
+            font-size: 0.8rem;
+            color: #4a5568;
+        }
+        #contractOutput .date-location {
+            text-align: center;
+            margin-top: 3rem;
+            font-size: 0.95rem;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #contractOutput, #contractOutput * {
+                visibility: visible;
+            }
+            #contractOutput {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                border: none;
+                box-shadow: none;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+        
+        /* ###################################################### */
+        /* ALTERAÇÃO AQUI: Estilos para o Modal Dossiê */
+        /* ###################################################### */
+        .modal-content {
+            max-height: 90vh;
+        }
+/* --- ESTILOS DO EDITOR DE TEXTO RICO --- */
+.editor-toolbar {
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-bottom: none;
+    border-radius: 0.375rem 0.375rem 0 0;
+    padding: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.editor-btn {
+    background-color: white;
+    border: 1px solid #d1d5db;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.editor-btn:hover {
+    background-color: #e5e7eb;
+}
+
+.rich-editor {
+    min-height: 400px;
+    max-height: 600px;
+    overflow-y: auto;
+    border: 1px solid #d1d5db;
+    border-radius: 0 0 0.375rem 0.375rem;
+    padding: 1rem;
+    background-color: white;
+    font-family: 'Georgia', serif; /* Mesma fonte do contrato final para você ver como vai ficar */
+    outline: none;
+}
+
+.rich-editor:focus {
+    ring: 2px;
+    ring-color: #3b82f6;
+    border-color: #3b82f6;
+}
+
+/* Garante que o conteúdo colado mantenha espaçamento */
+.rich-editor p {
+    margin-bottom: 1em;
+}
+        /* ###################################################### */
+
+
+    </style>
