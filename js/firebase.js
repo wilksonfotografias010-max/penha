@@ -23,12 +23,12 @@ const envText = await response.text();
 const env = parseEnv(envText);
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBMQiHvzuFYmum-wG4OfOl2WodfhUeKpnQ",
-  authDomain: "penha-livre.firebaseapp.com",
-  projectId: "penha-livre",
-  storageBucket: "penha-livre.firebasestorage.app",
-  messagingSenderId: "568948881302",
-  appId: "1:568948881302:web:553a49e4bdfe6a68724fb7"
+  apiKey: "AIzaSyBC3laSN4MUaVEWUXRcEQzGSd2syKQLFkM",
+  authDomain: "franciscopenha-cac9a.firebaseapp.com",
+  projectId: "franciscopenha-cac9a",
+  storageBucket: "franciscopenha-cac9a.firebasestorage.app",
+  messagingSenderId: "364864321406",
+  appId: "1:364864321406:web:b6578bd0143586b78ae52f"
 };
 
 console.log("--- FIREBASE CONFIG DEBUG ---");
