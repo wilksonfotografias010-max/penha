@@ -684,14 +684,23 @@ document.getElementById('form-evento').addEventListener('submit', (e) => {
     e.preventDefault();
     const colunasOrdenadas = [...dbState.colunas].sort((a, b) => a.ordem - b.ordem);
     if (colunasOrdenadas.length === 0) { ui.showToast("Crie uma coluna Kanban primeiro.", 'warning'); return; }
+    const tipoEvento = e.target.elements['evento-tipo'].value;
+    const clienteId = e.target.elements['evento-cliente'].value;
+
+    // CUSTOM VALIDATION: Requires Client unless logic
+    if (tipoEvento !== 'Bloqueio' && tipoEvento !== 'Pessoal' && !clienteId) {
+        ui.showToast("Por favor, selecione um Cliente para este tipo de evento.", "warning");
+        return;
+    }
+
     const data = {
-        clienteId: e.target.elements['evento-cliente'].value,
+        clienteId: clienteId || null, // Allow null for Bloqueio
         vendedorId: e.target.elements['evento-vendedor'].value,
         nome: e.target.elements['evento-nome'].value,
         data: e.target.elements['evento-data'].value,
         local: e.target.elements['evento-local'].value,
-        tipo: e.target.elements['evento-tipo'].value,
-        subcategoria: e.target.elements['evento-subcategoria'].value, // [NEW]
+        tipo: tipoEvento,
+        subcategoria: e.target.elements['evento-subcategoria'].value,
         descricao: e.target.elements['evento-descricao'].value,
         entrega_previa_status: "Pendente", entrega_midia_status: "Pendente", entrega_album_status: "Pendente",
         entrega_previa_data: null, entrega_midia_data: null, entrega_album_data: null,

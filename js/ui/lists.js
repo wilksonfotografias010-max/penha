@@ -46,7 +46,7 @@ export function renderEventosTable(dbState) {
 
     lista.innerHTML = eventos.map(evento => {
         const cliente = dbState.clientes.find(c => c.id === evento.clienteId);
-        const nomeCliente = cliente ? cliente.nome : 'Cliente Removido';
+        const nomeCliente = cliente ? cliente.nome : (evento.clienteId ? 'Cliente Removido' : '---');
         const dataFormatada = new Date(evento.data).toLocaleDateString('pt-BR');
 
         // Exibe Categoria e Subcategoria (se houver)

@@ -20,23 +20,27 @@ export function renderCalendario(calendarioData, dbState) {
         const dataFormatada = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
         const eventosDoDia = dbState.eventos.filter(evento => {
             if (!evento.data) return false;
-
-            // FILTRO: Só mostra no calendário se tiver contrato vinculado
-            const temContrato = dbState.contratos.some(c => c.eventoId === evento.id);
-            if (!temContrato) return false;
-
             const dataEvento = new Date(evento.data + 'T00:00:00');
             return dataEvento.getTime() === dataAtual.getTime();
         });
         let eventosHtml = eventosDoDia.map(evento => {
-            let eventColorClass = 'bg-blue-100 text-blue-800';
-            switch (evento.tipo) {
-                case 'Casamento': eventColorClass = 'bg-pink-100 text-pink-800'; break;
-                case 'Infantil': eventColorClass = 'bg-yellow-100 text-yellow-800'; break;
-                case 'Corporativo': eventColorClass = 'bg-indigo-100 text-indigo-800'; break;
-                case 'Ensaio': eventColorClass = 'bg-teal-100 text-teal-800'; break;
-                case 'Evento Adulto': eventColorClass = 'bg-purple-100 text-purple-800'; break;
+            let eventColorClass = 'bg-gray-200 text-gray-600'; // Default / Bloqueio No-Contract
+
+            // Se tiver contrato, usa as cores de categoria
+            const temContrato = dbState.contratos.some(c => c.eventoId === evento.id);
+            if (temContrato) {
+                eventColorClass = 'bg-blue-100 text-blue-800'; // Default Contract
+                switch (evento.tipo) {
+                    case 'Casamento': eventColorClass = 'bg-pink-100 text-pink-800'; break;
+                    case 'Infantil': eventColorClass = 'bg-yellow-100 text-yellow-800'; break;
+                    case 'Corporativo': eventColorClass = 'bg-indigo-100 text-indigo-800'; break;
+                    case 'Ensaio': eventColorClass = 'bg-teal-100 text-teal-800'; break;
+                    case 'Evento Adulto': eventColorClass = 'bg-purple-100 text-purple-800'; break;
+                }
+            } else if (evento.tipo === 'Bloqueio' || evento.tipo === 'Pessoal') {
+                eventColorClass = 'bg-gray-800 text-white'; // Destaque para Bloqueio
             }
+
             return `<span class="calendar-event ${eventColorClass}" title="${evento.nome}">${evento.nome}</span>`;
         }).join('');
         gridEl.innerHTML += `

@@ -60,6 +60,13 @@ export function populateDynamicSelects(dbState) {
             select.appendChild(optGeral);
         }
 
+        if (id === 'evento-tipo') {
+            const optBlock = document.createElement('option');
+            optBlock.value = 'Bloqueio';
+            optBlock.textContent = 'Bloqueio / Pessoal';
+            select.appendChild(optBlock);
+        }
+
         if (dbState.categorias) {
             dbState.categorias.forEach(cat => {
                 const option = document.createElement('option');

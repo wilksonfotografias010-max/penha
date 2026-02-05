@@ -18,7 +18,7 @@ export function renderKanban(dbState) {
         let cardsHtml = eventosDaColuna.map(evento => {
             const dataFormatada = evento.data ? new Date(evento.data + 'T00:00:00').toLocaleDateString('pt-BR') : 'Data indefinida';
             const cliente = dbState.clientes.find(c => c.id === evento.clienteId);
-            const nomeCliente = cliente ? cliente.nome : "Cliente não encontrado";
+            const nomeCliente = cliente ? cliente.nome : (evento.tipo === 'Bloqueio' || evento.tipo === 'Pessoal' ? '---' : "Cliente não encontrado");
             let borderColor = 'border-blue-500';
             switch (evento.tipo) {
                 case 'Casamento': borderColor = 'border-pink-500'; break;

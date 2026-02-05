@@ -246,8 +246,8 @@
                 <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                     <h2 class="text-lg font-semibold mb-4">Novo Evento</h2>
                     <form id="form-evento" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <select name="evento-cliente" id="evento-cliente" class="p-2 border rounded" required>
-                            <option>Carregando clientes...</option>
+                        <select name="evento-cliente" id="evento-cliente" class="p-2 border rounded">
+                            <option value="">Carregando clientes...</option>
                         </select>
 
                         <select name="evento-vendedor" id="evento-vendedor" class="p-2 border rounded">
@@ -261,6 +261,7 @@
                         <input type="text" name="evento-local" placeholder="Local do Evento" class="p-2 border rounded">
                         <select name="evento-tipo" id="evento-tipo" class="p-2 border rounded">
                             <option value="">Categoria...</option>
+                            <option value="Bloqueio">Bloqueio / Pessoal</option>
                         </select>
                         <select name="evento-subcategoria" id="evento-subcategoria" class="p-2 border rounded" disabled>
                             <option value="">Subcategoria...</option>
